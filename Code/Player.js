@@ -6,13 +6,15 @@ module.exports = class Player {
         this.username = 'Default';
         this.serverID = 0;
         this.id = customDigit();
-        this.position = new Vector2();
+        this.position = new Vector2(0,0);
         this.spawnLoc = Math.floor(Math.random() * (1 - 0 + 1)) + 0;
         this.lobby = 0;
         this.type = Math.floor(Math.random() * (2 - 0 + 1)) + 0;
         // this.type = 1;
         this.status = 'Alive';
         this.ready = false;
+        this.isSit = 'Null';
+        // this.idKursi = 'Kursi1';
     }
 
     displayPlayerInformation() {

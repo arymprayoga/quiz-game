@@ -77,6 +77,7 @@ module.exports = class GameLobby extends LobbyBase {
         super.onEnterLobby(connection);
         // console.log(connection.lobby.connections.length);
         // console.log(connection.lobby.settings.maxPlayer);
+        // console.log(this.connections)
         const players = this.connections.map(c => c.player).map(c => {
             return {
                 id: c.id,
@@ -206,7 +207,9 @@ module.exports = class GameLobby extends LobbyBase {
                     name: connection.player.username,
                     type: connection.player.type,
                     idLobby: connection.lobby.id,
-                    serverID: connection.player.serverID
+                    serverID: connection.player.serverID,
+                    position: connection.player.position,
+                    isSit: connection.player.isSit
                 };
         console.log('emit spawn here')
         socket.emit('spawn', data);
@@ -218,7 +221,9 @@ module.exports = class GameLobby extends LobbyBase {
                     name: c.player.username,
                     type: c.player.type,
                     idLobby: c.lobby.id,
-                    serverID: connection.player.serverID
+                    position: c.player.position,
+                    serverID: connection.player.serverID,
+                    isSit: c.player.isSit
                 });
             }
         });

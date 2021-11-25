@@ -60,11 +60,11 @@ module.exports = class Server {
         let currentLobbyIndex = connection.player.lobby;
         server.lobbys[currentLobbyIndex].onLeaveLobby(connection);
         // console.log('A = ' + currentLobbyIndex + ' B = ' + server.generalServerID);
-        // console.log(server.lobbys);
+        console.log(server.lobbys);
         if (
             server.lobbys[currentLobbyIndex].id != server.generalServerID &&
             server.lobbys[currentLobbyIndex] != undefined &&
-            server.lobbys[currentLobbyIndex].connections.length == 0
+            server.lobbys[currentLobbyIndex].connections.length == 0 
         ) {
             console.log('Closing down lobby (' + currentLobbyIndex + ')');
             delete server.lobbys[currentLobbyIndex];
@@ -106,15 +106,32 @@ module.exports = class Server {
 
     onTest1Gan(connection = Connection, data) {
         let server = this;
-        if(data.serverID){
+        if (data.serverID) {
             connection.player.serverID = data.serverID;
         }
         connection.player.type = 1;
-        connection.player.username = data.name;
+        connection.player.username = data.serverName;
         console.log('make new lobby');
-        const gamelobby = new GameLobby(new GameLobbySettings('Standard', 30));
-        server.lobbys[gamelobby.id] = gamelobby;
-        server.onSwitchLobby(connection, gamelobby.id);
+        let found = false;
+        let idTemp = 'a';
+        Object.values(server.lobbys).map(c =>  {
+            if (c.settings) {
+                if (c.settings.idGuru == data.idGuru) {
+                    found = true;
+                    idTemp = c.id;
+                }
+            }
+        });
+
+        if (found) {
+            server.onSwitchLobby(connection, idTemp);
+        } else {
+            const gamelobby = new GameLobby(new GameLobbySettings('Kelas', 31, data.idGuru));
+            server.lobbys[gamelobby.id] = gamelobby;
+            server.onSwitchLobby(connection, gamelobby.id);
+        }
+        console.log(idTemp)
+        console.log(found)
     }
 
     onTest2Gan(connection = Connection, data) {
@@ -122,13 +139,13 @@ module.exports = class Server {
         console.log('join lobby');
         // console.log(server.lobbys)
         // console.log(connection.player)
-        if(server.lobbys[data.idLobby]){
+        if (server.lobbys[data.idLobby]) {
             connection.player.type = 2;
             connection.player.username = data.name;
             server.onSwitchLobby(connection, data.idLobby);
         } else {
             connection.socket.emit('errorPesan');
-        }        
+        }
     }
 
     onSwitchLobby(connection = Connection, lobbyID) {
@@ -148,7 +165,7 @@ module.exports = class Server {
         data.namaGuru = connection.player.username;
         data.serverID = connection.player.serverID;
         axios
-            .post('http://103.172.204.53:8000/submit-soal', {
+            .post('http://103.121.17.201:8000/submit-soal', {
                 data
             })
             .then(res => {
@@ -163,7 +180,7 @@ module.exports = class Server {
                 console.log("Error di kirim soal")
             })
         //console.log(connection)
-            //connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
+        //connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
     }
 
     onSubmitJawaban(connection = Connection, data) {
@@ -171,7 +188,7 @@ module.exports = class Server {
         data.namaSiswa = connection.player.username;
         console.log(data)
         axios
-            .post('http://103.172.204.53:8000/submit-jawaban', {
+            .post('http://103.121.17.201:8000/submit-jawaban', {
                 data
             })
             .then(res => {
@@ -184,6 +201,6 @@ module.exports = class Server {
                 console.log("Error di kirim jawaban")
             })
         //console.log(connection)
-            //connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
+        //connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
     }
 };

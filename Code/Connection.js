@@ -48,14 +48,16 @@ module.exports = class Connection {
             const axios = require('axios')
             if (data.name && data.password) {
                 axios
-                    .post('http://103.172.204.53:8000/login-game', {
+                    .post('http://103.121.17.201:8000/login-game', {
                         username: data.name,
                         password: data.password
                     })
                     .then(res => {
                         socket.emit('suksesLogin');
                         console.log('sukses')
-                        data.serverID = res.data;
+                        data.serverID = res.data.id;
+                        data.serverName = res.data.name;
+                        data.idGuru = res.data.username;
                         server.onTest1Gan(connection, data);
                         console.log(data)
                     })
@@ -63,7 +65,7 @@ module.exports = class Connection {
                         console.log(error)
                         socket.emit('gagalLogin');
                         console.log("Error Login")
-                    })                
+                    })
             } else if (!data.name || !data.password) {
                 console.log("error");
                 socket.emit('gagalLogin');
@@ -102,6 +104,11 @@ module.exports = class Connection {
 
         socket.on('updateKursi', function (data) {
             console.log(data)
+            if (!data.isSit) {
+                player.isSit = 'Null';
+            } else {
+                player.isSit = data.idChair;
+            }
             socket.broadcast.to(connection.lobby.id).emit('updateKursi', data);
         });
 
