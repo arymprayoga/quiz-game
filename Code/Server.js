@@ -106,8 +106,8 @@ module.exports = class Server {
     onJoinLobby(connection = Connection, data) {
         let server = this;
         // console.log(server.lobbys[data.idLobby].settings.joinable);
-        if (server.lobbys[data.idLobby].settings.joinable == true) {
-            if (server.lobbys[data.idLobby]) {
+        if (server.lobbys[data.idLobby]) {
+            if (server.lobbys[data.idLobby].settings.joinable == true) {
                 connection.player.type = 2;
                 connection.player.username = data.name;
                 server.onSwitchLobby(connection, data.idLobby);
@@ -144,7 +144,7 @@ module.exports = class Server {
             connection.lobby.settings.quiz = false;
 
             if (playerCount >= 1 && playerCount <= 6) {
-                pembagianDiskusi = 2; //Ganti Gan
+                pembagianDiskusi = 1; 
             } else if (playerCount >= 7 && playerCount <= 12) {
                 pembagianDiskusi = 2;
             } else if (playerCount >= 13 && playerCount <= 18) {
@@ -181,10 +181,10 @@ module.exports = class Server {
                     indexNewLobby = 0;
                 }
             }
-
-            console.log(connections[0].player.lobbyDiskusi);
-            connection.socket.emit('buatDiskusi', { hasil });
-            connection.socket.broadcast.to(connection.lobby.id).emit('buatDiskusi', { hasil });
+            console.log("test");
+            console.log(hasil);
+            connection.socket.emit('buatDiskusi', { hasil, pembagianDiskusi });
+            connection.socket.broadcast.to(connection.lobby.id).emit('buatDiskusi', { hasil, pembagianDiskusi });
         }
     }
 
