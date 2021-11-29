@@ -5,5 +5,6 @@ module.exports = class GameLobbySettings {
         this.joinable = true;
         this.maxPlayers = maxPlayers;
         this.deletable = true;
+        this.quiz = true;
     }
 };

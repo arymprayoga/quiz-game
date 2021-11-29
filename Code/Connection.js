@@ -16,28 +16,10 @@ module.exports = class Connection {
             server.onDisconnected(connection);
         });
 
-        socket.on('setPlayerName', (data) => {
-            // server.onDisconnected(connection);
-            // console.log(data);
-            console.log('halo');
-        });
-
-        socket.on('testingsend', _ => {
-            // server.onAttemptToJoinGame(connection);
-            console.log('halo2');
-        });
-
-        socket.on('joinGame', (data) => {
-            player.username = data.nama;
-            console.log('test');
-            connection.socket.emit('feedback', { nama: player.username, idchannel: data.kode });
-            // server.onAttemptToJoinGame(connection);
-        });
-
         socket.on('joinLobby', (data) => {
             // console.log(data);
             if (data.name && data.idLobby) {
-                server.onTest2Gan(connection, data);
+                server.onJoinLobby(connection, data);
             } else {
                 socket.emit('errorPesan');
             }
@@ -45,6 +27,8 @@ module.exports = class Connection {
         });
 
         socket.on('createLobby', (data) => {
+            // server.onCreateLobby(connection, data);
+            // socket.emit('suksesLogin');
             const axios = require('axios')
             if (data.name && data.password) {
                 axios
@@ -58,7 +42,7 @@ module.exports = class Connection {
                         data.serverID = res.data.id;
                         data.serverName = res.data.name;
                         data.idGuru = res.data.username;
-                        server.onTest1Gan(connection, data);
+                        server.onCreateLobby(connection, data);
                         console.log(data)
                     })
                     .catch(error => {
@@ -72,34 +56,30 @@ module.exports = class Connection {
             }
         });
 
-        socket.on('updatePintu', function (data) {
-            socket.broadcast.to(connection.lobby.id).emit('updatePintu', data);
-            // console.log(server.connections);
+        socket.on('buatDiskusi', (data) => {
+            server.onSwitchLobbyDiskusi(connection, data);
         });
 
-        socket.on('playerReady', function (data) {
-            // socket.broadcast.to(connection.lobby.id).emit('updatePintu', data);
-            console.log(server.connections);
+        socket.on('moveToDiskusi', (data) => {
+            console.log('data ' + data)
+            server.onMoveToDiskusi(connection, data);
         });
 
-        socket.on('killPlayer', function (data) {
-            socket.broadcast.to(connection.lobby.id).emit('killPlayer', data);
-            console.log(data.id);
+        socket.on('returnToKelas', (data) => {
+            server.onReturnToKelas(connection, data);
         });
 
         socket.on('updatePosition', function (data) {
             player.position.x = data.position.x;
             player.position.y = data.position.y;
 
-            // var d = {
-            //     id = player.id,
-            //     position = {
-            //         x = player.position.x,
-            //         y = player.position.y
-            //     }
-            // }
+            try {
+                socket.broadcast.to(connection.lobby.id).emit('updatePosition', player);
+            } catch (error) {
+                console.log(error)
+                socket.emit('errorPesan');
+            }
 
-            socket.broadcast.to(connection.lobby.id).emit('updatePosition', player);
         });
 
         socket.on('updateKursi', function (data) {
@@ -113,17 +93,15 @@ module.exports = class Connection {
         });
 
         socket.on('submitSoal', function (data) {
-            server.onSubmitSoal(connection, data)
-            // console.log("awal");
-            // console.log("halo soal");
-            // socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
+            if (connection.lobby.settings.quiz) {
+                server.onSubmitSoal(connection, data);
+            } else {
+                socket.emit('errorPesan');
+            }
         });
 
         socket.on('submitJawaban', function (data) {
-            server.onSubmitJawaban(connection, data)
-            // console.log(data);
-            // console.log("halo jawaban");
-            // socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
+            server.onSubmitJawaban(connection, data);
         });
 
         socket.on('listBuku', function (data) {

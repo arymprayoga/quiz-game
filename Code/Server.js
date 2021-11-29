@@ -60,51 +60,19 @@ module.exports = class Server {
         let currentLobbyIndex = connection.player.lobby;
         server.lobbys[currentLobbyIndex].onLeaveLobby(connection);
         // console.log('A = ' + currentLobbyIndex + ' B = ' + server.generalServerID);
-        console.log(server.lobbys);
+        // console.log(server.lobbys);
         if (
             server.lobbys[currentLobbyIndex].id != server.generalServerID &&
             server.lobbys[currentLobbyIndex] != undefined &&
-            server.lobbys[currentLobbyIndex].connections.length == 0 
+            server.lobbys[currentLobbyIndex].connections.length == 0
+            // && server.lobbys[currentLobbyIndex].settings.deletable == true
         ) {
             console.log('Closing down lobby (' + currentLobbyIndex + ')');
             delete server.lobbys[currentLobbyIndex];
         }
     }
 
-    onAttemptToJoinGame(connection = Connection) {
-        let server = this;
-        let lobbyFound = false;
-
-        let gameLobbies = [];
-        for (var id in server.lobbys) {
-            if (server.lobbys[id] instanceof GameLobby) {
-                gameLobbies.push(server.lobbys[id]);
-            }
-        }
-
-        console.log('Found (' + gameLobbies.length + ') lobies in the server');
-
-        gameLobbies.forEach(lobby => {
-            if (!lobbyFound) {
-                let canJoin = lobby.canEnterLobby(connection);
-                // console.log('masuk lobby 0 B');
-                if (canJoin) {
-                    // console.log('masuk lobby 0 A');
-                    lobbyFound = true;
-                    server.onSwitchLobby(connection, lobby.id);
-                }
-            }
-        });
-
-        if (!lobbyFound) {
-            console.log('make new lobby');
-            const gamelobby = new GameLobby(new GameLobbySettings('Standard', 1));
-            server.lobbys[gamelobby.id] = gamelobby;
-            server.onSwitchLobby(connection, gamelobby.id);
-        }
-    }
-
-    onTest1Gan(connection = Connection, data) {
+    onCreateLobby(connection = Connection, data) {
         let server = this;
         if (data.serverID) {
             connection.player.serverID = data.serverID;
@@ -114,7 +82,7 @@ module.exports = class Server {
         console.log('make new lobby');
         let found = false;
         let idTemp = 'a';
-        Object.values(server.lobbys).map(c =>  {
+        Object.values(server.lobbys).map(c => {
             if (c.settings) {
                 if (c.settings.idGuru == data.idGuru) {
                     found = true;
@@ -122,30 +90,34 @@ module.exports = class Server {
                 }
             }
         });
+        setTimeout(() => {
+            if (found) {
+                server.onSwitchLobby(connection, idTemp);
+            } else {
+                const gamelobby = new GameLobby(null, new GameLobbySettings('Kelas', 37, data.idGuru));
+                // const gamelobby = new GameLobby(null, new GameLobbySettings('Kelas', 37, 123));
+                server.lobbys[gamelobby.id] = gamelobby;
+                server.onSwitchLobby(connection, gamelobby.id);
+            }
+        }, 2000);
 
-        if (found) {
-            server.onSwitchLobby(connection, idTemp);
-        } else {
-            const gamelobby = new GameLobby(new GameLobbySettings('Kelas', 31, data.idGuru));
-            server.lobbys[gamelobby.id] = gamelobby;
-            server.onSwitchLobby(connection, gamelobby.id);
-        }
-        console.log(idTemp)
-        console.log(found)
     }
 
-    onTest2Gan(connection = Connection, data) {
+    onJoinLobby(connection = Connection, data) {
         let server = this;
-        console.log('join lobby');
-        // console.log(server.lobbys)
-        // console.log(connection.player)
-        if (server.lobbys[data.idLobby]) {
-            connection.player.type = 2;
-            connection.player.username = data.name;
-            server.onSwitchLobby(connection, data.idLobby);
+        // console.log(server.lobbys[data.idLobby].settings.joinable);
+        if (server.lobbys[data.idLobby].settings.joinable == true) {
+            if (server.lobbys[data.idLobby]) {
+                connection.player.type = 2;
+                connection.player.username = data.name;
+                server.onSwitchLobby(connection, data.idLobby);
+            } else {
+                connection.socket.emit('errorPesan');
+            }
         } else {
             connection.socket.emit('errorPesan');
         }
+
     }
 
     onSwitchLobby(connection = Connection, lobbyID) {
@@ -158,6 +130,132 @@ module.exports = class Server {
         lobbys[connection.player.lobby].onLeaveLobby(connection);
         lobbys[lobbyID].onEnterLobby(connection);
     }
+
+    onSwitchLobbyDiskusi(connection = Connection, data) {
+        if (connection.lobby.connections.length > 1 && connection.player.type == 1) {
+            let server = this;
+            let oldLobbyId = connection.lobby.id;
+            let playerCount = connection.lobby.connections.length - 1;
+            let connections = connection.lobby.connections;
+            let pembagianDiskusi = 0;
+
+            connection.lobby.settings.deletable = false;
+            connection.lobby.settings.joinable = false;
+            connection.lobby.settings.quiz = false;
+
+            if (playerCount >= 1 && playerCount <= 6) {
+                pembagianDiskusi = 2; //Ganti Gan
+            } else if (playerCount >= 7 && playerCount <= 12) {
+                pembagianDiskusi = 2;
+            } else if (playerCount >= 13 && playerCount <= 18) {
+                pembagianDiskusi = 3;
+            } else if (playerCount >= 19 && playerCount <= 24) {
+                pembagianDiskusi = 4;
+            } else if (playerCount >= 25 && playerCount <= 30) {
+                pembagianDiskusi = 5;
+            } else if (playerCount >= 31 && playerCount <= 36) {
+                pembagianDiskusi = 6;
+            }
+
+            connection.lobby.listDiskusi = pembagianDiskusi;
+
+            let shuffleArray = server.shuffle(connections);
+            let indexNewLobby = 0;
+            var obj = {};
+            var hasil = [];
+            for (let i = 0; i < shuffleArray.length; i++) {
+                if (shuffleArray[i].player.id != connection.player.id) {
+                    shuffleArray[i].player.lobbyDiskusi = oldLobbyId + '-' + indexNewLobby;
+                    obj.idServer = oldLobbyId + '-' + indexNewLobby;
+                    obj.idPlayer = shuffleArray[i].player.id;
+                } else {
+                    shuffleArray[i].player.lobbyDiskusi = oldLobbyId + '-0';
+                    obj.idServer = oldLobbyId + '-0';
+                    obj.idPlayer = shuffleArray[i].player.id;
+                }
+
+                hasil[i] = obj;
+                obj = {};
+                indexNewLobby++;
+                if (indexNewLobby == pembagianDiskusi) {
+                    indexNewLobby = 0;
+                }
+            }
+
+            console.log(connections[0].player.lobbyDiskusi);
+            connection.socket.emit('buatDiskusi', { hasil });
+            connection.socket.broadcast.to(connection.lobby.id).emit('buatDiskusi', { hasil });
+        }
+    }
+
+    onMoveToDiskusi(connection = Connection, data) {
+        let connections = connection.player;
+        connections.lobbyDiskusi = data;
+        let obj = {};
+        obj.idServer = connections.lobbyDiskusi;
+        obj.idPlayer = connections.id;
+        // hasil[i] = obj;
+
+        console.log(connections);
+        connection.socket.broadcast.to(connection.lobby.id).emit('moveToDiskusi', obj);
+    }
+
+    onReturnToKelas(connection = Connection, data) {
+        let idKelas = connection.lobby.id;
+
+        connection.lobby.settings.deletable = true;
+        connection.lobby.settings.joinable = true;
+        connection.lobby.settings.quiz = true;
+
+        console.log('Return Kelas');
+        connection.socket.emit('returnToKelas', { idKelas });
+        connection.socket.broadcast.to(connection.lobby.id).emit('returnToKelas', { idKelas });
+    }
+
+    // onSwitchLobbyDiskusi(connection = Connection, data) {
+    //     let server = this;
+    //     let oldLobbyId = connection.lobby.id;
+    //     let playerCount = connection.lobby.connections.length;
+    //     let connections = connection.lobby.connections;
+    //     let pembagianDiskusi = 0;
+
+    //     connection.lobby.settings.deletable = false;
+    //     connection.lobby.settings.joinable = false;
+
+    //     if (playerCount >= 1 && playerCount <= 6) {
+    //         pembagianDiskusi = 1;
+    //     } else if (playerCount >= 7 && playerCount <= 12) {
+    //         pembagianDiskusi = 2;
+    //     } else if (playerCount >= 13 && playerCount <= 18) {
+    //         pembagianDiskusi = 3;
+    //     } else if (playerCount >= 19 && playerCount <= 24) {
+    //         pembagianDiskusi = 4;
+    //     } else if (playerCount >= 25 && playerCount <= 30) {
+    //         pembagianDiskusi = 5;
+    //     } else if (playerCount >= 31 && playerCount <= 36) {
+    //         pembagianDiskusi = 6;
+    //     }
+
+    //     for (let index = 0; index < pembagianDiskusi; index++) {
+    //         let gamelobby = new GameLobby(oldLobbyId + '-' + index, new GameLobbySettings('Diskusi', 6, 1));
+    //         server.lobbys[gamelobby.id] = gamelobby;
+    //     }
+
+    //     let indexNewLobby = 0;
+    //     for (let index = 0; index < playerCount; index++) {
+    //         connections[index].socket.join(oldLobbyId + '-' + indexNewLobby);
+    //         connections[index].lobby = lobbys[oldLobbyId + '-' + indexNewLobby];
+
+    //         lobbys[connections[index].player.lobby].onLeaveLobby(connections[index]);
+    //         lobbys[oldLobbyId + '-' + indexNewLobby].onEnterLobbyDiskusi(connections[index]);
+    //         indexNewLobby++;
+    //         if (indexNewLobby == pembagianDiskusi) {
+    //             indexNewLobby = 0;
+    //         }
+    //     }
+
+    //     // console.log(connection)
+    // }
 
     onSubmitSoal(connection = Connection, data) {
         const axios = require('axios')
@@ -203,4 +301,23 @@ module.exports = class Server {
         //console.log(connection)
         //connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
     }
+
+    shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (currentIndex != 0) {
+
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+
+            // And swap it with the current element.
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex], array[currentIndex]];
+        }
+
+        return array;
+    }
+
 };

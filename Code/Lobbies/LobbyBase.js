@@ -3,9 +3,10 @@ let nanoID = require('nanoid');
 
 module.exports = class LobbyBase {
     test = [];
-    constructor() {
+    constructor(id) {
         const nanoid = nanoID.customAlphabet('1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 6);
-        this.id = nanoid();
+        this.id = id ? id : nanoid();
+        this.listDiskusi = 0;
         this.connections = [];
     }
 

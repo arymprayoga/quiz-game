@@ -9,20 +9,13 @@ module.exports = class Player {
         this.position = new Vector2(0,0);
         this.spawnLoc = Math.floor(Math.random() * (1 - 0 + 1)) + 0;
         this.lobby = 0;
-        this.type = Math.floor(Math.random() * (2 - 0 + 1)) + 0;
-        // this.type = 1;
-        this.status = 'Alive';
-        this.ready = false;
+        this.lobbyDiskusi = 'Null';
+        this.type = 99;
         this.isSit = 'Null';
-        // this.idKursi = 'Kursi1';
     }
 
     displayPlayerInformation() {
         let player = this;
         return '(' + player.username + ':' + player.id + ')';
-    }
-
-    generateNewType(type) {
-        this.type = type;
     }
 };

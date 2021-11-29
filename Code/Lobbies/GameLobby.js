@@ -4,8 +4,8 @@ let Connection = require('../Connection.js');
 
 module.exports = class GameLobby extends LobbyBase {
     playerCount = 1;
-    constructor(settings = GameLobbySettings) {
-        super();
+    constructor(id, settings = GameLobbySettings) {
+        super(id);
         this.settings = settings;
     }
 
@@ -13,18 +13,18 @@ module.exports = class GameLobby extends LobbyBase {
         let lobby = this;
     }
 
-    canEnterLobby(connection = Connection) {
-        let lobby = this;
-        console.log(this.lobby);
-        let maxPlayerCount = lobby.settings.maxPlayers;
-        let currentPlayerCount = lobby.connections.length;
+    // canEnterLobby(connection = Connection) {
+    //     let lobby = this;
+    //     console.log(this.lobby);
+    //     let maxPlayerCount = lobby.settings.maxPlayers;
+    //     let currentPlayerCount = lobby.connections.length;
 
-        if (currentPlayerCount + 1 > maxPlayerCount) {
-            return false;
-        }
+    //     if (currentPlayerCount + 1 > maxPlayerCount) {
+    //         return false;
+    //     }
 
-        return true;
-    }
+    //     return true;
+    // }
 
     // onEnterLobby(connection = Connection) {
     //     let lobby = this;
@@ -75,9 +75,6 @@ module.exports = class GameLobby extends LobbyBase {
         let socket = connection.socket;
         const io = connection.io;
         super.onEnterLobby(connection);
-        // console.log(connection.lobby.connections.length);
-        // console.log(connection.lobby.settings.maxPlayer);
-        // console.log(this.connections)
         const players = this.connections.map(c => c.player).map(c => {
             return {
                 id: c.id,
@@ -86,32 +83,23 @@ module.exports = class GameLobby extends LobbyBase {
         });
         console.log(players);
         lobby.spawnPlayers(connection);
-        // io.in(lobby.id).emit('waitingForPlayer', {
-        //     player: players,
-        //     playerLength : players.length,
-        //     playerCount: this.settings.maxPlayers,     
-        // });
-
-        // socket.on('waitingForPlayer', res => {
-        //     console.log(res);
-        // });
-        // connections.forEach(c => {
-        //     // if (c.player.id != connection.player.id) {
-        //     socket.emit('debugLog', {
-        //         id: c.player.id,
-        //     });
-        //     socket.to(lobby.id).emit('debugLog', {
-        //         id: c.player.id,
-        //     });
-        //     // }
-        // });
-
-        // TODO buat dan pindahkan code dibawah function start match
-        // if (connection.lobby.connections.length == connection.lobby.settings.maxPlayers) {
-        //     console.log('Ini Gan Hasilnya');
-        //     lobby.spawnPlayers(connection);
-        // }
     }
+
+    // onEnterLobbyDiskusi(connection = Connection) {
+    //     let lobby = this;
+    //     let connections = lobby.connections;
+    //     let socket = connection.socket;
+    //     const io = connection.io;
+    //     super.onEnterLobby(connection);
+    //     const players = this.connections.map(c => c.player).map(c => {
+    //         return {
+    //             id: c.id,
+    //             type: c.type,
+    //         }
+    //     });
+    //     console.log(players);
+    //     lobby.spawnPlayers(connection);
+    // }
 
     onLeaveLobby(connection = Connection) {
         let lobby = this;
