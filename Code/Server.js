@@ -48,12 +48,14 @@ module.exports = class Server {
     onDisconnected(connection = Connection) {
         let server = this;
         let id = connection.player.id;
+        // let isSit = connection.player.isSit;
 
         delete server.connections[id];
         console.log('Player ' + connection.player.displayPlayerInformation() + ' has disconnected');
 
         connection.socket.broadcast.to(connection.player.lobby).emit('disconnected', {
             id: id,
+            // isSit : isSit,
         });
 
         //Preform lobby clean up
@@ -107,8 +109,9 @@ module.exports = class Server {
         let server = this;
         // console.log(server.lobbys[data.idLobby].settings.joinable);
         if (server.lobbys[data.idLobby]) {
-            if (server.lobbys[data.idLobby].settings.joinable == true) {
-                connection.player.type = 2;
+            let canJoin = server.lobbys[data.idLobby].canEnterLobby(connection);
+            if (server.lobbys[data.idLobby].settings.joinable && canJoin) {
+                connection.player.type = data.type;
                 connection.player.username = data.name;
                 server.onSwitchLobby(connection, data.idLobby);
             } else {
@@ -144,7 +147,7 @@ module.exports = class Server {
             connection.lobby.settings.quiz = false;
 
             if (playerCount >= 1 && playerCount <= 6) {
-                pembagianDiskusi = 1; 
+                pembagianDiskusi = 1;
             } else if (playerCount >= 7 && playerCount <= 12) {
                 pembagianDiskusi = 2;
             } else if (playerCount >= 13 && playerCount <= 18) {
@@ -159,17 +162,20 @@ module.exports = class Server {
 
             connection.lobby.listDiskusi = pembagianDiskusi;
 
-            let shuffleArray = server.shuffle(connections);
+            // let shuffleArray = server.shuffle(connections);
+            let shuffleArray = connections;
             let indexNewLobby = 0;
             var obj = {};
             var hasil = [];
             for (let i = 0; i < shuffleArray.length; i++) {
                 if (shuffleArray[i].player.id != connection.player.id) {
                     shuffleArray[i].player.lobbyDiskusi = oldLobbyId + '-' + indexNewLobby;
+                    shuffleArray[i].player.isSit = 'Null';
                     obj.idServer = oldLobbyId + '-' + indexNewLobby;
                     obj.idPlayer = shuffleArray[i].player.id;
                 } else {
                     shuffleArray[i].player.lobbyDiskusi = oldLobbyId + '-0';
+                    shuffleArray[i].player.isSit = 'Null';
                     obj.idServer = oldLobbyId + '-0';
                     obj.idPlayer = shuffleArray[i].player.id;
                 }
@@ -181,7 +187,7 @@ module.exports = class Server {
                     indexNewLobby = 0;
                 }
             }
-            console.log("test");
+            // console.log("test");
             console.log(hasil);
             connection.socket.emit('buatDiskusi', { hasil, pembagianDiskusi });
             connection.socket.broadcast.to(connection.lobby.id).emit('buatDiskusi', { hasil, pembagianDiskusi });
@@ -189,14 +195,37 @@ module.exports = class Server {
     }
 
     onMoveToDiskusi(connection = Connection, data) {
+        console.log("Movetodiskusi awal");
         let connections = connection.player;
         connections.lobbyDiskusi = data;
         let obj = {};
         obj.idServer = connections.lobbyDiskusi;
         obj.idPlayer = connections.id;
-        // hasil[i] = obj;
 
-        console.log(connections);
+        connection.socket.broadcast.to(connection.lobby.id).emit('moveToDiskusi', obj);
+        console.log("Movetodiskusi " + connections.id);
+    }
+
+    onMoveRuangan(connection = Connection, data) {
+        let connections = connection.player;
+        connections.lobbyDiskusi = data;
+        let obj = {};
+        obj.idServer = connections.lobbyDiskusi;
+        obj.idPlayer = connections.id;
+
+        let connections2 = connection.lobby.connections;
+        var hasil = [];
+        var obj2 = {};
+        for (let i = 0; i < connections2.length; i++) {
+            obj2.idServer = connections2[i].player.lobbyDiskusi;
+            obj2.idPlayer = connections2[i].player.id;
+            obj2.position = connections2[i].player.position;
+            obj2.isSit = connections2[i].player.isSit;
+            hasil[i] = obj2;
+            obj2 = {};
+        }
+        console.log("Moveruangan guru");
+        connection.socket.emit('moveRuangan', { hasil });
         connection.socket.broadcast.to(connection.lobby.id).emit('moveToDiskusi', obj);
     }
 
@@ -263,7 +292,7 @@ module.exports = class Server {
         data.namaGuru = connection.player.username;
         data.serverID = connection.player.serverID;
         axios
-            .post('http://103.121.17.201:8000/submit-soal', {
+            .post('http://103.174.114.25:8000/submit-soal', {
                 data
             })
             .then(res => {
@@ -286,7 +315,7 @@ module.exports = class Server {
         data.namaSiswa = connection.player.username;
         console.log(data)
         axios
-            .post('http://103.121.17.201:8000/submit-jawaban', {
+            .post('http://103.174.114.25:8000/submit-jawaban', {
                 data
             })
             .then(res => {

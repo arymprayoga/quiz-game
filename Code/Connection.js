@@ -18,7 +18,7 @@ module.exports = class Connection {
 
         socket.on('joinLobby', (data) => {
             // console.log(data);
-            if (data.name && data.idLobby) {
+            if (data.name && data.idLobby && data.type) {
                 server.onJoinLobby(connection, data);
             } else {
                 socket.emit('errorPesan');
@@ -32,7 +32,7 @@ module.exports = class Connection {
             const axios = require('axios')
             if (data.name && data.password) {
                 axios
-                    .post('http://103.121.17.201:8000/login-game', {
+                    .post('http://103.174.114.25:8000/login-game', {
                         username: data.name,
                         password: data.password
                     })
@@ -56,13 +56,25 @@ module.exports = class Connection {
             }
         });
 
+        socket.on('raiseHand', function (data) {
+            console.log('test raise hand');
+            socket.broadcast.to(connection.lobby.id).emit('raiseHand', player);
+            // socket.emit('raiseHand');
+            console.log('test raise hand2');
+        });
+
         socket.on('buatDiskusi', (data) => {
             server.onSwitchLobbyDiskusi(connection, data);
         });
 
         socket.on('moveToDiskusi', (data) => {
-            console.log('data ' + data)
+            // console.log('data ' + data)
             server.onMoveToDiskusi(connection, data);
+        });
+
+        socket.on('moveRuangan', (data) => {
+            // console.log('data ' + data)
+            server.onMoveRuangan(connection, data);
         });
 
         socket.on('returnToKelas', (data) => {
@@ -104,40 +116,49 @@ module.exports = class Connection {
             server.onSubmitJawaban(connection, data);
         });
 
+        socket.on('downloadBuku', function (data) {
+            console.log(data)
+            const axios = require('axios')
+            axios
+                .get('http://103.174.114.25:8000/download-buku/'+data)
+                .then(res => {
+                    socket.emit('downloadBuku', { linkBuku: res.data });
+                    console.log(res.data)
+                })
+                .catch(error => {
+                    console.log(error)
+                    console.log("Error download buku")
+                })
+        });
+
         socket.on('listBuku', function (data) {
-            // const axios = require('axios')
-            // axios
-            // .get('http://103.121.17.201:8000/list-buku')
-            // .then(res => {
-            //     //console.log(`statusCode: ${res.status}`)
-            //     //console.log(res)
-            //     // const listBuku = res.data.map(item => {
-            //     //     return {
-            //     //         namaSiswa: item.namaSiswa,
-            //     //         jawabanSiswa : item.jawabanSiswa
-            //     //     }
-            //     // });
-            //     socket.emit('listBuku', {daftarBuku : res.data});
-            //     console.log(res.data)
+            const axios = require('axios')
+            axios
+            .get('http://103.174.114.25:8000/list-buku/'+data)
+            .then(res => {
+                socket.emit('listBuku', {daftarBuku : res.data});
+                console.log(res.data)
 
-            // })
-            // .catch(error => {
-            //     console.log(error)
-            //     console.log("Error di kirim soal")
-            // })
+            })
+            .catch(error => {
+                console.log(error)
+                console.log("Error di list buku")
+            })
+        });
 
-            const arrayBuku = [{
-                "judulBuku": "How to Get a Girl",
-                "linkBuku": "https://drive.google.com/file/d/1yTISArlbhM_gnjpI8Iw8Rda2PiBReu32/view?usp=sharing",
-            },
-            {
-                "judulBuku": "Test Gan",
-                "linkBuku": "https://drive.google.com/file/d/1yTISArlbhM_gnjpI8Iw8Rda2PiBReu32/view?usp=sharing",
-            }]
-            socket.emit('listBuku', { daftarBuku: arrayBuku });
+        socket.on('searchBuku', function (data) {
+            const axios = require('axios')
+            axios
+            .get('http://103.174.114.25:8000/search-buku/'+data)
+            .then(res => {
+                socket.emit('searchBuku', {daftarBuku : res.data});
+                console.log(res.data)
 
-            // console.log(arrayBuku);
-
+            })
+            .catch(error => {
+                console.log(error)
+                console.log("Error di kirim soal")
+            })
         });
 
 

@@ -13,18 +13,17 @@ module.exports = class GameLobby extends LobbyBase {
         let lobby = this;
     }
 
-    // canEnterLobby(connection = Connection) {
-    //     let lobby = this;
-    //     console.log(this.lobby);
-    //     let maxPlayerCount = lobby.settings.maxPlayers;
-    //     let currentPlayerCount = lobby.connections.length;
+    canEnterLobby(connection = Connection) {
+        let lobby = this;
+        let maxPlayerCount = lobby.settings.maxPlayers;
+        let currentPlayerCount = lobby.connections.length;
 
-    //     if (currentPlayerCount + 1 > maxPlayerCount) {
-    //         return false;
-    //     }
+        if (currentPlayerCount + 1 > maxPlayerCount) {
+            return false;
+        }
 
-    //     return true;
-    // }
+        return true;
+    }
 
     // onEnterLobby(connection = Connection) {
     //     let lobby = this;
