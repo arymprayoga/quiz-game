@@ -32,7 +32,7 @@ module.exports = class Connection {
             const axios = require('axios')
             if (data.name && data.password) {
                 axios
-                    .post('http://103.174.114.25:8000/login-game', {
+                    .post('http://103.181.142.138:8000/login-game', {
                         username: data.name,
                         password: data.password
                     })
@@ -61,6 +61,82 @@ module.exports = class Connection {
             socket.broadcast.to(connection.lobby.id).emit('raiseHand', player);
             // socket.emit('raiseHand');
             console.log('test raise hand2');
+        });
+
+        socket.on('globalMute', function (data) {
+            console.log('mute global');
+            socket.broadcast.to(connection.lobby.id).emit('globalMute');
+        });
+
+        socket.on('openWhiteboard', function (data) {
+            console.log('open whiteboard');
+            connection.lobby.settings.whiteboard = true;
+
+            socket.emit('openWhiteboard');
+            socket.broadcast.to(connection.lobby.id).emit('openWhiteboard');
+        });
+
+        socket.on('closeWhiteboard', function (data) {
+            console.log('close whiteboard');
+            connection.lobby.settings.whiteboard = false;
+
+            socket.emit('closeWhiteboard');
+            socket.broadcast.to(connection.lobby.id).emit('closeWhiteboard');
+        });
+
+        socket.on('clearWhiteboard', function (data) {
+            console.log('clear whiteboard');
+            connection.lobby.settings.whiteboardData = '';
+
+            socket.emit('clearWhiteboard');
+            socket.broadcast.to(connection.lobby.id).emit('clearWhiteboard');
+        });
+
+        socket.on('drawWhiteboard', function (data) {
+            console.log('drawing data');
+            server.onDrawWhiteboard(connection, data);
+        });
+
+        socket.on('showWhiteboard', function (data) {
+            console.log('showing whiteboard data');
+            socket.emit('showWhiteboard', connection.lobby.settings.whiteboardData);
+        });
+
+        socket.on('wbChange', function (data) {
+            console.log('change whiteboard privilege');
+            console.log(data)
+            connection.lobby.settings.whiteboardID = data;
+
+            socket.emit('wbChange', {data: connection.lobby.settings.whiteboardID});
+            socket.broadcast.to(connection.lobby.id).emit('wbChange', {data: connection.lobby.settings.whiteboardID});
+        });
+
+        socket.on('checkState', function (data) {
+            console.log('check state data');
+
+            let dataCompile = {
+                whiteboard : connection.lobby.settings.whiteboard ? 1 : 0,
+                whiteboardID : connection.lobby.settings.whiteboardID,
+                whiteboardData : connection.lobby.settings.whiteboardData,
+                shapeData : connection.lobby.settings.whiteboardData,
+                textData : connection.lobby.settings.whiteboardData
+            }
+
+            socket.emit('checkState', {data: dataCompile});
+        });
+
+        socket.on('textWhiteboard', function (data) {
+            console.log('text data');
+
+            connection.lobby.settings.textData = data;
+            socket.broadcast.to(connection.lobby.id).emit('textWhiteboard', data);
+        });
+
+        socket.on('shapeWhiteboard', function (data) {
+            console.log('shape data');
+
+            connection.lobby.settings.shapeData = data;
+            socket.broadcast.to(connection.lobby.id).emit('shapeWhiteboard', data);
         });
 
         socket.on('buatDiskusi', (data) => {
@@ -120,7 +196,7 @@ module.exports = class Connection {
             console.log(data)
             const axios = require('axios')
             axios
-                .get('http://103.174.114.25:8000/download-buku/'+data)
+                .get('http://103.181.142.138:8000/download-buku/'+data)
                 .then(res => {
                     socket.emit('downloadBuku', { linkBuku: res.data });
                     console.log(res.data)
@@ -134,7 +210,7 @@ module.exports = class Connection {
         socket.on('listBuku', function (data) {
             const axios = require('axios')
             axios
-            .get('http://103.174.114.25:8000/list-buku/'+data)
+            .get('http://103.181.142.138:8000/list-buku/'+data)
             .then(res => {
                 socket.emit('listBuku', {daftarBuku : res.data});
                 console.log(res.data)
@@ -149,7 +225,7 @@ module.exports = class Connection {
         socket.on('searchBuku', function (data) {
             const axios = require('axios')
             axios
-            .get('http://103.174.114.25:8000/search-buku/'+data)
+            .get('http://103.181.142.138:8000/search-buku/'+data)
             .then(res => {
                 socket.emit('searchBuku', {daftarBuku : res.data});
                 console.log(res.data)
@@ -159,6 +235,25 @@ module.exports = class Connection {
                 console.log(error)
                 console.log("Error di kirim soal")
             })
+        });
+
+        socket.on('playerList', function(data) {
+            console.log('player list gais')
+
+            let playersArray = [];
+            
+            connection.lobby.connections.forEach(element => {
+                let playerObject = {
+                    username: element.player.username,
+                    id: element.player.id
+                };
+
+                playersArray.push(playerObject);
+            });
+
+            console.log(playersArray)
+            // console.log(players)
+            socket.emit('playerList', {data: playersArray});
         });
 
 

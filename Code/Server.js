@@ -86,6 +86,7 @@ module.exports = class Server {
         let idTemp = 'a';
         Object.values(server.lobbys).map(c => {
             if (c.settings) {
+                c.settings.whiteboardID = data.idGuru;
                 if (c.settings.idGuru == data.idGuru) {
                     found = true;
                     idTemp = c.id;
@@ -241,6 +242,11 @@ module.exports = class Server {
         connection.socket.broadcast.to(connection.lobby.id).emit('returnToKelas', { idKelas });
     }
 
+    onDrawWhiteboard(connection = Connection, data) {
+        connection.lobby.settings.whiteboardData = data;
+        connection.socket.broadcast.to(connection.lobby.id).emit('drawWhiteboard', data);
+    }
+
     // onSwitchLobbyDiskusi(connection = Connection, data) {
     //     let server = this;
     //     let oldLobbyId = connection.lobby.id;
@@ -292,7 +298,7 @@ module.exports = class Server {
         data.namaGuru = connection.player.username;
         data.serverID = connection.player.serverID;
         axios
-            .post('http://103.174.114.25:8000/submit-soal', {
+            .post('http://103.181.142.138:8000/submit-soal', {
                 data
             })
             .then(res => {
@@ -315,7 +321,7 @@ module.exports = class Server {
         data.namaSiswa = connection.player.username;
         console.log(data)
         axios
-            .post('http://103.174.114.25:8000/submit-jawaban', {
+            .post('http://103.181.142.138:8000/submit-jawaban', {
                 data
             })
             .then(res => {

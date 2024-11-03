@@ -6,5 +6,10 @@ module.exports = class GameLobbySettings {
         this.maxPlayers = maxPlayers;
         this.deletable = true;
         this.quiz = true;
+        this.whiteboard = false;
+        this.whiteboardID = '';
+        this.whiteboardData = '';
+        this.shapeData = '';
+        this.textData = '';
     }
 };
