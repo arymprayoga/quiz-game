@@ -30,7 +30,56 @@ class QuizService {
     async submitAnswer(answerData) {
         try {
             const answerId = nanoid(8);
-            const score = await this.calculateScore(answerData.jawaban, answerData.kodeSoal);
+
+            // Get the quiz to determine correct answers
+            const quiz = await db.get('SELECT questions FROM quizzes WHERE id = ?', [answerData.kodeSoal]);
+
+            if (!quiz || !quiz.questions) {
+                throw new Error('Quiz not found');
+            }
+
+            const questions = JSON.parse(quiz.questions);
+            let correctCount = 0;
+
+            // Enhance answers with correctness information
+            const enhancedAnswers = answerData.jawaban.map((userAnswer, index) => {
+                const question = questions[index];
+                let isCorrect = false;
+
+                if (question) {
+                    if (question.type === 'pilgan' && userAnswer.selectedAnswer !== undefined) {
+                        // Multiple choice: compare selected answer with correct answer
+                        isCorrect = question.correctAnswer === userAnswer.selectedAnswer;
+                        if (isCorrect) correctCount++;
+
+                        return {
+                            ...userAnswer,
+                            isCorrect,
+                            questionType: 'pilgan',
+                            correctAnswer: question.correctAnswer,
+                            selectedOption: question.options && userAnswer.selectedAnswer >= 1 && userAnswer.selectedAnswer <= question.options.length ? question.options[userAnswer.selectedAnswer - 1] : null
+                        };
+                    } else if (question.type === 'essay' && userAnswer.essayAnswer !== undefined) {
+                        // Essay: always mark as correct for now (manual grading needed)
+                        isCorrect = userAnswer.essayAnswer && userAnswer.essayAnswer !== 'Siswa Tidak Menjawab';
+                        if (isCorrect) correctCount++;
+
+                        return {
+                            ...userAnswer,
+                            isCorrect,
+                            questionType: 'essay'
+                        };
+                    }
+                }
+
+                return {
+                    ...userAnswer,
+                    isCorrect: false,
+                    questionType: 'unknown'
+                };
+            });
+
+            const score = Math.round((correctCount / questions.length) * 100);
 
             await db.run(
                 `INSERT INTO answers (id, quiz_id, student_name, lobby_id, answers, score)
@@ -40,7 +89,7 @@ class QuizService {
                     answerData.kodeSoal,
                     answerData.namaSiswa,
                     answerData.idLobby || '',
-                    JSON.stringify(answerData.jawaban || []),
+                    JSON.stringify(enhancedAnswers),
                     score
                 ]
             );
@@ -134,10 +183,48 @@ class QuizService {
                 'SELECT id, quiz_id as quizId, student_name as studentName, lobby_id as lobbyId, answers, score, submitted_at as submittedAt FROM answers ORDER BY submitted_at DESC'
             );
 
-            return answers.map(answer => ({
-                ...answer,
-                answers: JSON.parse(answer.answers)
-            }));
+            // Get all quizzes to enhance answers with isCorrect property
+            const quizzes = await db.all('SELECT id, questions FROM quizzes');
+            const quizMap = {};
+            quizzes.forEach(quiz => {
+                quizMap[quiz.id] = JSON.parse(quiz.questions);
+            });
+
+            return answers.map(answer => {
+                const parsedAnswers = JSON.parse(answer.answers);
+                const questions = quizMap[answer.quizId] || [];
+
+                // Enhance answers with isCorrect property if missing
+                const enhancedAnswers = parsedAnswers.map((userAnswer, index) => {
+                    // If answer already has isCorrect, keep it
+                    if (Object.prototype.hasOwnProperty.call(userAnswer, 'isCorrect')) {
+                        return userAnswer;
+                    }
+
+                    // Calculate isCorrect for old answers
+                    const question = questions[index];
+                    let isCorrect = false;
+
+                    if (question) {
+                        if (question.type === 'pilgan' && userAnswer.selectedAnswer !== undefined) {
+                            isCorrect = question.correctAnswer === userAnswer.selectedAnswer;
+                        } else if (question.type === 'essay' && userAnswer.essayAnswer !== undefined) {
+                            isCorrect = userAnswer.essayAnswer && userAnswer.essayAnswer !== 'Siswa Tidak Menjawab';
+                        }
+                    }
+
+                    return {
+                        ...userAnswer,
+                        isCorrect,
+                        questionType: question ? question.type : 'unknown'
+                    };
+                });
+
+                return {
+                    ...answer,
+                    answers: enhancedAnswers
+                };
+            });
         } catch (error) {
             console.error('Error getting all answers:', error);
             return [];
@@ -151,10 +238,44 @@ class QuizService {
                 [quizId]
             );
 
-            return answers.map(answer => ({
-                ...answer,
-                answers: JSON.parse(answer.answers)
-            }));
+            // Get the quiz questions to calculate isCorrect for old answers
+            const quiz = await db.get('SELECT questions FROM quizzes WHERE id = ?', [quizId]);
+            const questions = quiz && quiz.questions ? JSON.parse(quiz.questions) : [];
+
+            return answers.map(answer => {
+                const parsedAnswers = JSON.parse(answer.answers);
+
+                // Enhance answers with isCorrect property if missing
+                const enhancedAnswers = parsedAnswers.map((userAnswer, index) => {
+                    // If answer already has isCorrect, keep it
+                    if (Object.prototype.hasOwnProperty.call(userAnswer, 'isCorrect')) {
+                        return userAnswer;
+                    }
+
+                    // Calculate isCorrect for old answers
+                    const question = questions[index];
+                    let isCorrect = false;
+
+                    if (question) {
+                        if (question.type === 'pilgan' && userAnswer.selectedAnswer !== undefined) {
+                            isCorrect = question.correctAnswer === userAnswer.selectedAnswer;
+                        } else if (question.type === 'essay' && userAnswer.essayAnswer !== undefined) {
+                            isCorrect = userAnswer.essayAnswer && userAnswer.essayAnswer !== 'Siswa Tidak Menjawab';
+                        }
+                    }
+
+                    return {
+                        ...userAnswer,
+                        isCorrect,
+                        questionType: question ? question.type : 'unknown'
+                    };
+                });
+
+                return {
+                    ...answer,
+                    answers: enhancedAnswers
+                };
+            });
         } catch (error) {
             console.error('Error getting answers by quiz:', error);
             return [];

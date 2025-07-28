@@ -258,31 +258,155 @@ module.exports = class Server {
 
     async onSubmitSoal(connection, data) {
         const httpClient = require('./HttpClient');
+
+        // Debug: Log the incoming data from C# client
+        console.log('=== DEBUG: Incoming submitSoal data ===');
+        console.log('Full data object:', JSON.stringify(data, null, 2));
+        console.log('Data keys:', Object.keys(data));
+        console.log('jenisSoal:', data.jenisSoal);
+        console.log('soal:', data.soal);
+        console.log('timer:', data.timer);
+        if (data.jenisSoal === 'pilgan') {
+            console.log('jawabana:', data.jawabana);
+            console.log('jawabanb:', data.jawabanb);
+            console.log('jawabanc:', data.jawabanc);
+            console.log('jawaband:', data.jawaband);
+            console.log('opsi:', data.opsi);
+        }
+        console.log('=====================================');
+
         data.idLobby = connection.lobby.id;
         data.namaGuru = connection.player.username;
         data.serverID = connection.player.serverID;
 
         try {
-            const res = await httpClient.post('/submit-soal', { data });
+            // Handle different question types from C# client
+            if (data.jenisSoal === 'pilgan') {
+                // Multiple choice question - ensure all required fields are present
+                if (!data.soal || !data.jawabana || !data.jawabanb || !data.jawabanc ||
+                    !data.jawaband || data.opsi === undefined || !data.timer) {
+                    console.log('Missing required fields for pilgan question');
+                    console.log('Field check - soal:', !!data.soal, 'jawabana:', !!data.jawabana, 'jawabanb:', !!data.jawabanb);
+                    console.log('Field check - jawabanc:', !!data.jawabanc, 'jawaband:', !!data.jawaband, 'opsi:', data.opsi !== undefined, 'timer:', !!data.timer);
+                    connection.socket.emit('errorPesan', { message: 'Missing required fields for multiple choice question' });
+                    return;
+                }
+                console.log('Processing pilgan question with timer:', data.timer);
+            } else if (data.jenisSoal === 'essay') {
+                // Essay question - ensure required fields are present
+                if (!data.soal || !data.timer) {
+                    console.log('Missing required fields for essay question');
+                    console.log('Field check - soal:', !!data.soal, 'timer:', !!data.timer);
+                    connection.socket.emit('errorPesan', { message: 'Missing required fields for essay question' });
+                    return;
+                }
+                console.log('Processing essay question with timer:', data.timer);
+            } else {
+                console.log('Unknown question type:', data.jenisSoal);
+                connection.socket.emit('errorPesan', { message: 'Unknown question type' });
+                return;
+            }
+
+            // Format the individual question data into the quiz format expected by QuizService
+            let questionObj = {
+                question: data.soal,
+                type: data.jenisSoal,
+                timer: data.timer
+            };
+
+            if (data.jenisSoal === 'pilgan') {
+                questionObj.options = [
+                    data.jawabana,
+                    data.jawabanb,
+                    data.jawabanc,
+                    data.jawaband
+                ];
+                questionObj.correctAnswer = data.opsi; // Keep 1-based as sent from Unity game
+            }
+
+            // Create quiz data structure for QuizService
+            const quizData = {
+                ...data, // Include serverID, namaGuru, idLobby
+                title: `Quiz - ${data.soal.substring(0, 50)}...`, // Create title from question text
+                questions: [questionObj] // Single question in array format
+            };
+
+            // Debug: Log what we're sending to the API
+            console.log('=== DEBUG: Formatted quiz data for API ===');
+            console.log('API payload:', JSON.stringify({ data: quizData }, null, 2));
+            console.log('==========================================');
+
+            const res = await httpClient.post('/submit-soal', { data: quizData });
+            console.log('=== DEBUG: Local API Response ===');
+            console.log('Response status:', res.status);
+            console.log('Response data:', res.data);
+            console.log('Response headers:', res.headers);
+            console.log('===============================');
+
             data.kodeSoal = res.data;
-            console.log('Berhasil di kirim soal');
+            console.log('Berhasil di kirim soal, kodeSoal:', data.kodeSoal);
             connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
         } catch (error) {
-            console.log(error);
+            console.log('=== DEBUG: API Error ===');
+            console.log('Error details:', error.message);
+            if (error.response) {
+                console.log('Error status:', error.response.status);
+                console.log('Error data:', error.response.data);
+                console.log('Error headers:', error.response.headers);
+            }
+            console.log('=======================');
             console.log('Error di kirim soal');
+            connection.socket.emit('errorPesan', { message: 'Failed to submit question' });
         }
     }
 
     async onSubmitJawaban(connection, data) {
         const httpClient = require('./HttpClient');
+
+        // Debug: Log incoming answer data
+        console.log('=== DEBUG: Incoming submitJawaban data ===');
+        console.log('Full data object:', JSON.stringify(data, null, 2));
+        console.log('Data keys:', Object.keys(data));
+        console.log('==========================================');
+
+        // Map client data to QuizService format
         data.namaSiswa = connection.player.username;
-        console.log(data);
+        data.idLobby = connection.lobby.id;
+
+        // Fix field mapping: client sends 'id' but QuizService expects 'kodeSoal'
+        if (data.id && !data.kodeSoal) {
+            data.kodeSoal = data.id;
+        }
+
+        // Fix answer format: QuizService expects 'jawaban' array, client sends individual fields
+        if (!data.jawaban) {
+            if (data.indexJawaban !== undefined) {
+                // Multiple choice answer - use indexJawaban
+                data.jawaban = [{ selectedAnswer: data.indexJawaban }];
+            } else if (data.jawaban !== undefined) {
+                // Essay answer - use jawaban text
+                data.jawaban = [{ essayAnswer: data.jawaban || 'Siswa Tidak Menjawab' }];
+            } else {
+                // Default empty answer
+                data.jawaban = [{ selectedAnswer: null }];
+            }
+        }
+
+        console.log('=== DEBUG: Formatted answer data for API ===');
+        console.log('API payload:', JSON.stringify({ data }, null, 2));
+        console.log('============================================');
 
         try {
             await httpClient.post('/submit-jawaban', { data });
             console.log('Berhasil di kirim jawaban');
         } catch (error) {
-            console.log(error);
+            console.log('=== DEBUG: Submit Answer Error ===');
+            console.log('Error details:', error.message);
+            if (error.response) {
+                console.log('Error status:', error.response.status);
+                console.log('Error data:', error.response.data);
+            }
+            console.log('=================================');
             console.log('Error di kirim jawaban');
         }
     }

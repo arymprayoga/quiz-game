@@ -77,6 +77,24 @@ class ExcelExportService {
                 const question = quiz.questions[questionIndex];
                 if (!question) return;
 
+                // Get correct answer text
+                let correctAnswerText = 'N/A';
+                if (question.options && question.correctAnswer >= 1 && question.correctAnswer <= question.options.length) {
+                    correctAnswerText = question.options[question.correctAnswer - 1];
+                }
+
+                // Get student answer text
+                let studentAnswerText = 'No Answer';
+                if (userAnswer.selectedAnswer !== undefined && userAnswer.selectedAnswer !== null) {
+                    if (question.options && userAnswer.selectedAnswer >= 1 && userAnswer.selectedAnswer <= question.options.length) {
+                        studentAnswerText = question.options[userAnswer.selectedAnswer - 1];
+                    } else {
+                        studentAnswerText = `Option ${userAnswer.selectedAnswer}`;
+                    }
+                } else if (userAnswer.essayAnswer) {
+                    studentAnswerText = userAnswer.essayAnswer;
+                }
+
                 data.push({
                     'Answer ID': answer.id,
                     'Quiz ID': answer.quizId,
@@ -85,8 +103,8 @@ class ExcelExportService {
                     'Lobby ID': answer.lobbyId,
                     'Question #': questionIndex + 1,
                     'Question': question.question,
-                    'Correct Answer': question.options[question.correctAnswer],
-                    'Student Answer': question.options[userAnswer.selectedAnswer] || 'No Answer',
+                    'Correct Answer': correctAnswerText,
+                    'Student Answer': studentAnswerText,
                     'Is Correct': userAnswer.isCorrect ? 'Yes' : 'No',
                     'Final Score': answer.score,
                     'Submitted Date': new Date(answer.submittedAt).toLocaleString()
@@ -134,7 +152,9 @@ class ExcelExportService {
     }
 
     async exportQuizByTeacher(teacherId, quizzes, answers) {
-        const teacherQuizzes = quizzes.filter(q => q.teacherId === teacherId);
+        // Convert teacherId to number to handle string parameters from URL
+        const numericTeacherId = parseInt(teacherId);
+        const teacherQuizzes = quizzes.filter(q => q.teacherId === numericTeacherId);
         const teacherAnswers = answers.filter(a =>
             teacherQuizzes.some(q => q.id === a.quizId)
         );

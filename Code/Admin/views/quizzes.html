@@ -297,7 +297,7 @@
                                     <div class="card-body p-2">
                                         <small class="text-muted">Question ${index + 1}</small>
                                         <p class="mb-1">${q.question}</p>
-                                        <small class="text-success">Answer: ${q.options ? q.options[q.correctAnswer] : 'N/A'}</small>
+                                        <small class="${q.type === 'pilgan' && q.correctAnswer > q.options?.length ? 'text-warning' : 'text-success'}">Answer: ${q.type === 'pilgan' && q.options && q.correctAnswer !== undefined && q.correctAnswer >= 1 && q.correctAnswer <= q.options.length ? q.options[q.correctAnswer - 1] : (q.type === 'pilgan' && q.correctAnswer !== undefined ? `Option ${q.correctAnswer} (Data Error: only ${q.options?.length || 0} options exist)` : (q.type === 'essay' ? 'Essay Question' : 'N/A'))}</small>
                                     </div>
                                 </div>
                             `).join('')}
@@ -363,29 +363,57 @@
 
         async function exportSingleQuiz(quiz) {
             try {
+                showAlert('Generating export...', 'info');
                 const response = await fetch(`/api/export/teacher/${quiz.teacherId}`, { method: 'POST' });
                 const result = await response.json();
                 
                 if (result.url) {
-                    window.open(result.url, '_blank');
+                    // Add timestamp to prevent caching issues
+                    const downloadUrl = result.url + '?t=' + Date.now();
+                    
+                    // Use a more reliable download method
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = result.filename || 'quiz-export.xlsx';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
                     showAlert('Quiz exported successfully!', 'success');
+                } else {
+                    showAlert('Export failed - no URL returned', 'danger');
                 }
             } catch (error) {
-                showAlert('Export failed', 'danger');
+                console.error('Export error:', error);
+                showAlert('Export failed: ' + error.message, 'danger');
             }
         }
 
         async function exportAllQuizzes() {
             try {
+                showAlert('Generating export...', 'info');
                 const response = await fetch('/api/export/all', { method: 'POST' });
                 const result = await response.json();
                 
                 if (result.url) {
-                    window.open(result.url, '_blank');
+                    // Add timestamp to prevent caching issues
+                    const downloadUrl = result.url + '?t=' + Date.now();
+                    
+                    // Use a more reliable download method
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = result.filename || 'all-quizzes-export.xlsx';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
                     showAlert('All quizzes exported successfully!', 'success');
+                } else {
+                    showAlert('Export failed - no URL returned', 'danger');
                 }
             } catch (error) {
-                showAlert('Export failed', 'danger');
+                console.error('Export error:', error);
+                showAlert('Export failed: ' + error.message, 'danger');
             }
         }
 
