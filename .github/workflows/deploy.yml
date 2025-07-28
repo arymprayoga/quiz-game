@@ -1,0 +1,79 @@
+name: Deploy Quiz Game Server
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linter
+      run: npm run lint
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Ubuntu Server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          # Navigate to application directory
+          cd /var/www/quiz-game || { echo "App directory not found"; exit 1; }
+          
+          # Pull latest changes
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Install/update dependencies
+          npm ci --production
+          
+          # Stop existing application
+          pm2 stop quiz-game || true
+          
+          # Start application with PM2
+          pm2 start ecosystem.config.js --env production
+          
+          # Save PM2 configuration
+          pm2 save
+          
+          # Health check
+          sleep 5
+          if curl -f http://localhost:4001/health; then
+            echo "✅ Deployment successful - Health check passed"
+          else
+            echo "❌ Deployment failed - Health check failed"
+            pm2 logs quiz-game --lines 50
+            exit 1
+          fi
+    
+    - name: Deployment Status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "🚀 Deployment completed successfully!"
+        else
+          echo "💥 Deployment failed!"
+          exit 1
+        fi
