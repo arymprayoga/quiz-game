@@ -36,9 +36,10 @@ jobs:
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT || 22 }}
         timeout: 30s
+        debug: true
         script: |
           echo "SSH connection successful"
           whoami
@@ -49,11 +50,12 @@ jobs:
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT || 22 }}
         timeout: 60s
         command_timeout: 30m
         connect_timeout: 10s
+        debug: true
         script: |
           # Navigate to application directory
           cd /var/www/quiz-game || { echo "App directory not found"; exit 1; }
