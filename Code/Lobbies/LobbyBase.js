@@ -10,18 +10,15 @@ module.exports = class LobbyBase {
         this.connections = [];
     }
 
-    onUpdate() {}
+    // onUpdate method removed - using event-driven architecture for better performance
 
     onEnterLobby(connection = Connection) {
         let lobby = this;
         let player = connection.player;
         player.ready = true;
-        // console.log(lobby);
         console.log('Player : ' + player.displayPlayerInformation() + ' has entered the lobby (' + lobby.id + ')');
 
         lobby.connections.push(connection);
-        // this.test.push(connection.player.id);
-        // console.log(lobby.connections);
         player.lobby = lobby.id;
         connection.lobby = lobby;
     }
@@ -33,8 +30,6 @@ module.exports = class LobbyBase {
         console.log('Player : ' + player.displayPlayerInformation() + ' has entered the lobby (' + lobby.id + ')');
 
         lobby.connections.push(connection);
-        // this.test.push(connection.player.id);
-        // console.log(lobby.connections);
         player.lobby = lobby.id;
         connection.lobby = lobby;
     }

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books - Quiz Game Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/admin/public/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/">
+                <i class="fas fa-gamepad"></i> Quiz Game Admin
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/teachers">Teachers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/quizzes">Quizzes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/exports">Exports</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2>Books Management</h2>
+                        <p class="text-muted">Upload and manage educational resources</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddBookModal()">
+                        <i class="fas fa-plus"></i> Add Book
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search books...">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="subjectFilter">
+                    <option value="">All Subjects</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="gradeFilter">
+                    <option value="">All Grades</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()" title="Clear Filters">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Book Library</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="booksTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Subject</th>
+                                        <th>Category</th>
+                                        <th>Grade</th>
+                                        <th>File Size</th>
+                                        <th>Uploaded</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="8" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Book Modal -->
+    <div class="modal fade" id="bookModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookModalTitle">Add Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bookForm" enctype="multipart/form-data">
+                        <input type="hidden" id="bookId" name="id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Book Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="author" class="form-label">Author</label>
+                                    <input type="text" class="form-control" id="author" name="author" required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label">Subject</label>
+                                    <input type="text" class="form-control" id="subject" name="subject" required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="ipa">IPA</option>
+                                        <option value="ips">IPS</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="grade" class="form-label">Grade</label>
+                                    <input type="text" class="form-control" id="grade" name="grade" required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bookFile" class="form-label">Book File</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" class="form-control" id="bookFile" name="bookFile" accept=".pdf,.doc,.docx,.txt">
+                                <div class="file-upload-text" id="fileUploadText">
+                                    <i class="fas fa-upload"></i>
+                                    <p class="mb-0">Click to select file or drag and drop</p>
+                                    <small class="text-muted">Supported formats: PDF, DOC, DOCX, TXT (Max 50MB)</small>
+                                </div>
+                            </div>
+                            <div class="form-text">Leave empty to keep current file (when editing)</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBook()">
+                        <span id="saveButtonText">Save</span>
+                        <span id="saveButtonSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Details Modal -->
+    <div class="modal fade" id="bookDetailsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Book Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="bookDetailsContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="downloadBookBtn">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/public/js/admin.js"></script>
+    <script>
+        let books = [];
+        let editingBook = null;
+
+        async function loadBooks() {
+            try {
+                const response = await apiRequest('/api/books');
+                books = response;
+                updateBooksTable();
+                updateFilters();
+            } catch (error) {
+                showAlert('Failed to load books', 'danger');
+            }
+        }
+
+        function updateBooksTable() {
+            const columns = [
+                'id',
+                'title',
+                'author',
+                'subject',
+                'category',
+                'grade',
+                'fileSize',
+                { key: 'uploadedAt', type: 'date' }
+            ];
+            
+            const actions = [
+                {
+                    text: 'View',
+                    type: 'info',
+                    icon: 'fas fa-eye',
+                    handler: viewBookDetails
+                },
+                {
+                    text: 'Download',
+                    type: 'success',
+                    icon: 'fas fa-download',
+                    handler: downloadBook
+                },
+                {
+                    text: 'Edit',
+                    type: 'warning',
+                    icon: 'fas fa-edit',
+                    handler: editBook
+                },
+                {
+                    text: 'Delete',
+                    type: 'danger',
+                    icon: 'fas fa-trash',
+                    handler: deleteBook
+                }
+            ];
+            
+            updateTable('booksTable', getFilteredBooks(), columns, actions);
+        }
+
+        function getFilteredBooks() {
+            let filtered = [...books];
+            
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const subjectFilter = document.getElementById('subjectFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const gradeFilter = document.getElementById('gradeFilter').value;
+            
+            if (searchTerm) {
+                filtered = filtered.filter(book => 
+                    book.title.toLowerCase().includes(searchTerm) ||
+                    book.author.toLowerCase().includes(searchTerm) ||
+                    book.subject.toLowerCase().includes(searchTerm) ||
+                    book.category.toLowerCase().includes(searchTerm) ||
+                    book.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (subjectFilter) {
+                filtered = filtered.filter(book => book.subject === subjectFilter);
+            }
+            
+            if (categoryFilter) {
+                filtered = filtered.filter(book => book.category === categoryFilter);
+            }
+            
+            if (gradeFilter) {
+                filtered = filtered.filter(book => book.grade === gradeFilter);
+            }
+            
+            return filtered;
+        }
+
+        function updateFilters() {
+            // Update subject filter
+            const subjectFilter = document.getElementById('subjectFilter');
+            const subjects = [...new Set(books.map(book => book.subject))].sort();
+            subjectFilter.innerHTML = '<option value="">All Subjects</option>';
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                subjectFilter.appendChild(option);
+            });
+
+            // Update category filter
+            const categoryFilter = document.getElementById('categoryFilter');
+            const categories = [...new Set(books.map(book => book.category))].sort();
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+
+            // Update grade filter
+            const gradeFilter = document.getElementById('gradeFilter');
+            const grades = [...new Set(books.map(book => book.grade))].sort();
+            gradeFilter.innerHTML = '<option value="">All Grades</option>';
+            grades.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade;
+                option.textContent = `Grade ${grade}`;
+                gradeFilter.appendChild(option);
+            });
+        }
+
+        function openAddBookModal() {
+            editingBook = null;
+            document.getElementById('bookModalTitle').textContent = 'Add Book';
+            document.getElementById('bookFile').required = true;
+            resetForm('bookForm');
+            openModal('bookModal');
+        }
+
+        function editBook(book) {
+            editingBook = book;
+            document.getElementById('bookModalTitle').textContent = 'Edit Book';
+            document.getElementById('bookFile').required = false;
+            
+            document.getElementById('bookId').value = book.id;
+            document.getElementById('title').value = book.title;
+            document.getElementById('author').value = book.author;
+            document.getElementById('subject').value = book.subject;
+            document.getElementById('category').value = book.category;
+            document.getElementById('grade').value = book.grade;
+            document.getElementById('description').value = book.description;
+            
+            openModal('bookModal');
+        }
+
+        async function saveBook() {
+            const rules = {
+                title: { required: true, minLength: 2 },
+                author: { required: true, minLength: 2 },
+                subject: { required: true },
+                category: { required: true },
+                grade: { required: true }
+            };
+
+            if (!validateForm('bookForm', rules)) {
+                return;
+            }
+
+            const form = document.getElementById('bookForm');
+            const formData = new FormData(form);
+
+            // Show loading state
+            const saveBtn = document.querySelector('#bookModal .btn-primary');
+            const saveText = document.getElementById('saveButtonText');
+            const saveSpinner = document.getElementById('saveButtonSpinner');
+            
+            saveBtn.disabled = true;
+            saveText.textContent = 'Saving...';
+            saveSpinner.style.display = 'inline-block';
+
+            try {
+                let response;
+                if (editingBook) {
+                    response = await fetch(`/admin/books/${editingBook.id}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    response = await fetch('/admin/books/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(editingBook ? 'Book updated successfully' : 'Book uploaded successfully', 'success');
+                    closeModal('bookModal');
+                    loadBooks();
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                showAlert(error.message, 'danger');
+            } finally {
+                // Reset loading state
+                saveBtn.disabled = false;
+                saveText.textContent = 'Save';
+                saveSpinner.style.display = 'none';
+            }
+        }
+
+        function viewBookDetails(book) {
+            const content = document.getElementById('bookDetailsContent');
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-sm">
+                            <tr><td><strong>ID:</strong></td><td>${book.id}</td></tr>
+                            <tr><td><strong>Title:</strong></td><td>${book.title}</td></tr>
+                            <tr><td><strong>Author:</strong></td><td>${book.author}</td></tr>
+                            <tr><td><strong>Subject:</strong></td><td>${book.subject}</td></tr>
+                            <tr><td><strong>Category:</strong></td><td>${book.category}</td></tr>
+                            <tr><td><strong>Grade:</strong></td><td>${book.grade}</td></tr>
+                            <tr><td><strong>File Size:</strong></td><td>${book.fileSize}</td></tr>
+                            <tr><td><strong>Uploaded:</strong></td><td>${formatDate(book.uploadedAt)}</td></tr>
+                        </table>
+                        ${book.description ? `
+                            <div class="mt-3">
+                                <strong>Description:</strong>
+                                <p class="mt-2">${book.description}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('downloadBookBtn').onclick = () => downloadBook(book);
+            openModal('bookDetailsModal');
+        }
+
+        function downloadBook(book) {
+            if (book.downloadUrl) {
+                window.open(book.downloadUrl, '_blank');
+            } else {
+                showAlert('No file available for download', 'warning');
+            }
+        }
+
+        async function deleteBook(book) {
+            if (confirm(`Are you sure you want to delete the book "${book.title}"?`)) {
+                try {
+                    await apiRequest(`/api/books/${book.id}`, {
+                        method: 'DELETE'
+                    });
+                    showAlert('Book deleted successfully', 'success');
+                    loadBooks();
+                } catch (error) {
+                    showAlert('Failed to delete book', 'danger');
+                }
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('subjectFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('gradeFilter').value = '';
+            updateBooksTable();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', updateBooksTable);
+        document.getElementById('subjectFilter').addEventListener('change', updateBooksTable);
+        document.getElementById('categoryFilter').addEventListener('change', updateBooksTable);
+        document.getElementById('gradeFilter').addEventListener('change', updateBooksTable);
+
+        // Setup file upload
+        setupFileUpload('bookFile', 'fileUploadText');
+
+        // Initialize
+        loadBooks();
+    </script>
+</body>
+</html>

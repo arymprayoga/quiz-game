@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "name": "Administrator",
+    "password": "$2b$10$fwFOq10aGgqFsJ3SRJwGfeXXsb5nxFILiLuf183cMOYq4hvMM90H6",
+    "email": "admin@school.com",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "username": "teacher1",
+    "name": "John Doe",
+    "password": "$2b$10$fwFOq10aGgqFsJ3SRJwGfeXXsb5nxFILiLuf183cMOYq4hvMM90H6",
+    "email": "john@school.com",
+    "createdAt": "2024-01-15T00:00:00.000Z"
+  }
+]

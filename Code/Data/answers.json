@@ -1,0 +1,17 @@
+[
+  {
+    "id": "A001",
+    "quizId": "Q001",
+    "studentName": "Student Test",
+    "lobbyId": "ABCD12",
+    "answers": [
+      {
+        "questionIndex": 0,
+        "selectedAnswer": 1,
+        "isCorrect": true
+      }
+    ],
+    "score": 100,
+    "submittedAt": "2024-01-01T10:15:00.000Z"
+  }
+]

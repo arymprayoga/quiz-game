@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzes - Quiz Game Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/admin/public/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/">
+                <i class="fas fa-gamepad"></i> Quiz Game Admin
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/teachers">Teachers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/quizzes">Quizzes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/exports">Exports</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2>Quiz Management</h2>
+                        <p class="text-muted">View and manage submitted quizzes and answers</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="exportAllQuizzes()">
+                            <i class="fas fa-download"></i> Export All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search quizzes...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="teacherFilter">
+                    <option value="">All Teachers</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Quiz List</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="quizzesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Quiz ID</th>
+                                        <th>Title</th>
+                                        <th>Teacher</th>
+                                        <th>Lobby ID</th>
+                                        <th>Questions</th>
+                                        <th>Created</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="8" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Details Modal -->
+    <div class="modal fade" id="quizDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Quiz Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="quizDetailsContent">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="exportQuizBtn">
+                        <i class="fas fa-download"></i> Export Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answers Modal -->
+    <div class="modal fade" id="answersModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Quiz Answers</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="answersContent">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/public/js/admin.js"></script>
+    <script>
+        let quizzes = [];
+        let teachers = [];
+        let currentQuiz = null;
+
+        async function loadData() {
+            try {
+                const [quizzesResponse, teachersResponse] = await Promise.all([
+                    apiRequest('/api/quizzes'),
+                    apiRequest('/api/teachers')
+                ]);
+                
+                quizzes = quizzesResponse;
+                teachers = teachersResponse;
+                
+                updateQuizzesTable();
+                updateTeacherFilter();
+            } catch (error) {
+                showAlert('Failed to load data', 'danger');
+            }
+        }
+
+        function updateQuizzesTable() {
+            const columns = [
+                'id',
+                'title',
+                'teacherName',
+                'lobbyId',
+                quiz => quiz.questions.length,
+                { key: 'createdAt', type: 'date' },
+                quiz => `<span class="badge bg-${quiz.status === 'active' ? 'success' : 'secondary'}">${quiz.status}</span>`
+            ];
+            
+            const actions = [
+                {
+                    text: 'Details',
+                    type: 'info',
+                    icon: 'fas fa-eye',
+                    handler: viewQuizDetails
+                },
+                {
+                    text: 'Answers',
+                    type: 'primary',
+                    icon: 'fas fa-list',
+                    handler: viewQuizAnswers
+                },
+                {
+                    text: 'Export',
+                    type: 'success',
+                    icon: 'fas fa-download',
+                    handler: exportSingleQuiz
+                },
+                {
+                    text: 'Delete',
+                    type: 'danger',
+                    icon: 'fas fa-trash',
+                    handler: deleteQuiz
+                }
+            ];
+            
+            updateTable('quizzesTable', getFilteredQuizzes(), columns, actions);
+        }
+
+        function getFilteredQuizzes() {
+            let filtered = [...quizzes];
+            
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const teacherFilter = document.getElementById('teacherFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            if (searchTerm) {
+                filtered = filtered.filter(quiz => 
+                    quiz.title.toLowerCase().includes(searchTerm) ||
+                    quiz.id.toLowerCase().includes(searchTerm) ||
+                    quiz.teacherName.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (teacherFilter) {
+                filtered = filtered.filter(quiz => quiz.teacherId.toString() === teacherFilter);
+            }
+            
+            if (statusFilter) {
+                filtered = filtered.filter(quiz => quiz.status === statusFilter);
+            }
+            
+            return filtered;
+        }
+
+        function updateTeacherFilter() {
+            const select = document.getElementById('teacherFilter');
+            select.innerHTML = '<option value="">All Teachers</option>';
+            
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher.id;
+                option.textContent = teacher.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function viewQuizDetails(quiz) {
+            currentQuiz = quiz;
+            const content = document.getElementById('quizDetailsContent');
+            
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Quiz Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Quiz ID:</strong></td><td>${quiz.id}</td></tr>
+                            <tr><td><strong>Title:</strong></td><td>${quiz.title}</td></tr>
+                            <tr><td><strong>Teacher:</strong></td><td>${quiz.teacherName}</td></tr>
+                            <tr><td><strong>Lobby ID:</strong></td><td>${quiz.lobbyId}</td></tr>
+                            <tr><td><strong>Created:</strong></td><td>${formatDate(quiz.createdAt)}</td></tr>
+                            <tr><td><strong>Status:</strong></td><td><span class="badge bg-${quiz.status === 'active' ? 'success' : 'secondary'}">${quiz.status}</span></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Questions (${quiz.questions.length})</h6>
+                        <div class="questions-list" style="max-height: 300px; overflow-y: auto;">
+                            ${quiz.questions.map((q, index) => `
+                                <div class="card mb-2">
+                                    <div class="card-body p-2">
+                                        <small class="text-muted">Question ${index + 1}</small>
+                                        <p class="mb-1">${q.question}</p>
+                                        <small class="text-success">Answer: ${q.options ? q.options[q.correctAnswer] : 'N/A'}</small>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('exportQuizBtn').onclick = () => exportSingleQuiz(quiz);
+            openModal('quizDetailsModal');
+        }
+
+        async function viewQuizAnswers(quiz) {
+            const content = document.getElementById('answersContent');
+            
+            try {
+                const answers = await apiRequest(`/api/quizzes/${quiz.id}/answers`);
+                
+                if (answers.length === 0) {
+                    content.innerHTML = '<p class="text-center text-muted">No answers submitted yet.</p>';
+                } else {
+                    const avgScore = Math.round(answers.reduce((sum, a) => sum + a.score, 0) / answers.length);
+                    
+                    content.innerHTML = `
+                        <div class="mb-3">
+                            <h6>Quiz: ${quiz.title}</h6>
+                            <p class="text-muted">Total Submissions: ${answers.length} | Average Score: ${avgScore}%</p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Score</th>
+                                        <th>Submitted</th>
+                                        <th>Correct Answers</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${answers.map(answer => `
+                                        <tr>
+                                            <td>${answer.studentName}</td>
+                                            <td>
+                                                <span class="badge bg-${answer.score >= 80 ? 'success' : answer.score >= 60 ? 'warning' : 'danger'}">
+                                                    ${answer.score}%
+                                                </span>
+                                            </td>
+                                            <td>${formatDate(answer.submittedAt)}</td>
+                                            <td>${answer.answers.filter(a => a.isCorrect).length}/${answer.answers.length}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                openModal('answersModal');
+            } catch (error) {
+                showAlert('Failed to load answers', 'danger');
+            }
+        }
+
+        async function exportSingleQuiz(quiz) {
+            try {
+                const response = await fetch(`/api/export/teacher/${quiz.teacherId}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.url) {
+                    window.open(result.url, '_blank');
+                    showAlert('Quiz exported successfully!', 'success');
+                }
+            } catch (error) {
+                showAlert('Export failed', 'danger');
+            }
+        }
+
+        async function exportAllQuizzes() {
+            try {
+                const response = await fetch('/api/export/all', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.url) {
+                    window.open(result.url, '_blank');
+                    showAlert('All quizzes exported successfully!', 'success');
+                }
+            } catch (error) {
+                showAlert('Export failed', 'danger');
+            }
+        }
+
+        async function deleteQuiz(quiz) {
+            if (confirm(`Are you sure you want to delete quiz "${quiz.title}"? This will also delete all associated answers.`)) {
+                try {
+                    await apiRequest(`/api/quizzes/${quiz.id}`, {
+                        method: 'DELETE'
+                    });
+                    showAlert('Quiz deleted successfully', 'success');
+                    loadData();
+                } catch (error) {
+                    showAlert('Failed to delete quiz', 'danger');
+                }
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('teacherFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            updateQuizzesTable();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', updateQuizzesTable);
+        document.getElementById('teacherFilter').addEventListener('change', updateQuizzesTable);
+        document.getElementById('statusFilter').addEventListener('change', updateQuizzesTable);
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>

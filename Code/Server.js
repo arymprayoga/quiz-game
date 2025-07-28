@@ -14,15 +14,15 @@ module.exports = class Server {
         this.startLobby = new LobbyBase();
         this.startLobby.id = this.generalServerID;
         this.lobbys[this.generalServerID] = this.startLobby;
+
+        // Initialize memory management
+        const memoryManager = require('./MemoryManager');
+        memoryManager.startPeriodicCleanup();
+        
+        console.log('Server initialized with enhanced memory management');
     }
 
-    onUpdate() {
-        let server = this;
-
-        for (let id in server.lobbys) {
-            server.lobbys[id].onUpdate();
-        }
-    }
+    // onUpdate method removed - using event-driven architecture for better performance
 
     onConnected(socket) {
         let server = this;
@@ -45,33 +45,44 @@ module.exports = class Server {
         return connection;
     }
 
-    onDisconnected(connection = Connection) {
+    onDisconnected(connection) {
+        const memoryManager = require('./MemoryManager');
         let server = this;
         let id = connection.player.id;
-        // let isSit = connection.player.isSit;
 
         delete server.connections[id];
         console.log('Player ' + connection.player.displayPlayerInformation() + ' has disconnected');
 
-        connection.socket.broadcast.to(connection.player.lobby).emit('disconnected', {
-            id: id,
-            // isSit : isSit,
-        });
-
-        //Preform lobby clean up
-        let currentLobbyIndex = connection.player.lobby;
-        server.lobbys[currentLobbyIndex].onLeaveLobby(connection);
-        // console.log('A = ' + currentLobbyIndex + ' B = ' + server.generalServerID);
-        // console.log(server.lobbys);
-        if (
-            server.lobbys[currentLobbyIndex].id != server.generalServerID &&
-            server.lobbys[currentLobbyIndex] != undefined &&
-            server.lobbys[currentLobbyIndex].connections.length == 0
-            // && server.lobbys[currentLobbyIndex].settings.deletable == true
-        ) {
-            console.log('Closing down lobby (' + currentLobbyIndex + ')');
-            delete server.lobbys[currentLobbyIndex];
+        // Broadcast disconnect to other players
+        try {
+            connection.socket.broadcast.to(connection.player.lobby).emit('disconnected', {
+                id: id,
+            });
+        } catch (error) {
+            console.error('Error broadcasting disconnect:', error.message);
         }
+
+        // Perform lobby cleanup
+        let currentLobbyIndex = connection.player.lobby;
+        if (server.lobbys[currentLobbyIndex]) {
+            server.lobbys[currentLobbyIndex].onLeaveLobby(connection);
+            
+            // Enhanced lobby cleanup - check if lobby should be closed
+            if (
+                server.lobbys[currentLobbyIndex].id != server.generalServerID &&
+                server.lobbys[currentLobbyIndex] != undefined &&
+                server.lobbys[currentLobbyIndex].connections.length == 0
+            ) {
+                console.log('Closing down lobby (' + currentLobbyIndex + ')');
+                
+                // Enhanced cleanup for the lobby
+                memoryManager.cleanupLobby(server.lobbys[currentLobbyIndex]);
+                delete server.lobbys[currentLobbyIndex];
+            }
+        }
+
+        // Enhanced player cleanup
+        memoryManager.cleanupPlayer(connection.player, connection);
     }
 
     onCreateLobby(connection = Connection, data) {
@@ -98,7 +109,6 @@ module.exports = class Server {
                 server.onSwitchLobby(connection, idTemp);
             } else {
                 const gamelobby = new GameLobby(null, new GameLobbySettings('Kelas', 37, data.idGuru));
-                // const gamelobby = new GameLobby(null, new GameLobbySettings('Kelas', 37, 123));
                 server.lobbys[gamelobby.id] = gamelobby;
                 server.onSwitchLobby(connection, gamelobby.id);
             }
@@ -247,94 +257,35 @@ module.exports = class Server {
         connection.socket.broadcast.to(connection.lobby.id).emit('drawWhiteboard', data);
     }
 
-    // onSwitchLobbyDiskusi(connection = Connection, data) {
-    //     let server = this;
-    //     let oldLobbyId = connection.lobby.id;
-    //     let playerCount = connection.lobby.connections.length;
-    //     let connections = connection.lobby.connections;
-    //     let pembagianDiskusi = 0;
-
-    //     connection.lobby.settings.deletable = false;
-    //     connection.lobby.settings.joinable = false;
-
-    //     if (playerCount >= 1 && playerCount <= 6) {
-    //         pembagianDiskusi = 1;
-    //     } else if (playerCount >= 7 && playerCount <= 12) {
-    //         pembagianDiskusi = 2;
-    //     } else if (playerCount >= 13 && playerCount <= 18) {
-    //         pembagianDiskusi = 3;
-    //     } else if (playerCount >= 19 && playerCount <= 24) {
-    //         pembagianDiskusi = 4;
-    //     } else if (playerCount >= 25 && playerCount <= 30) {
-    //         pembagianDiskusi = 5;
-    //     } else if (playerCount >= 31 && playerCount <= 36) {
-    //         pembagianDiskusi = 6;
-    //     }
-
-    //     for (let index = 0; index < pembagianDiskusi; index++) {
-    //         let gamelobby = new GameLobby(oldLobbyId + '-' + index, new GameLobbySettings('Diskusi', 6, 1));
-    //         server.lobbys[gamelobby.id] = gamelobby;
-    //     }
-
-    //     let indexNewLobby = 0;
-    //     for (let index = 0; index < playerCount; index++) {
-    //         connections[index].socket.join(oldLobbyId + '-' + indexNewLobby);
-    //         connections[index].lobby = lobbys[oldLobbyId + '-' + indexNewLobby];
-
-    //         lobbys[connections[index].player.lobby].onLeaveLobby(connections[index]);
-    //         lobbys[oldLobbyId + '-' + indexNewLobby].onEnterLobbyDiskusi(connections[index]);
-    //         indexNewLobby++;
-    //         if (indexNewLobby == pembagianDiskusi) {
-    //             indexNewLobby = 0;
-    //         }
-    //     }
-
-    //     // console.log(connection)
-    // }
-
-    onSubmitSoal(connection = Connection, data) {
-        const axios = require('axios')
+    async onSubmitSoal(connection, data) {
+        const httpClient = require('./HttpClient');
         data.idLobby = connection.lobby.id;
         data.namaGuru = connection.player.username;
         data.serverID = connection.player.serverID;
-        axios
-            .post('http://103.181.142.138:8000/submit-soal', {
-                data
-            })
-            .then(res => {
-                //console.log(`statusCode: ${res.status}`)
-                //console.log(res)
-                data.kodeSoal = res.data
-                console.log("Berhasil di kirim soal")
-                connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
-            })
-            .catch(error => {
-                console.log(error)
-                console.log("Error di kirim soal")
-            })
-        //console.log(connection)
-        //connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
+        
+        try {
+            const res = await httpClient.post('/submit-soal', { data });
+            data.kodeSoal = res.data;
+            console.log("Berhasil di kirim soal");
+            connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
+        } catch (error) {
+            console.log(error);
+            console.log("Error di kirim soal");
+        }
     }
 
-    onSubmitJawaban(connection = Connection, data) {
-        const axios = require('axios')
+    async onSubmitJawaban(connection, data) {
+        const httpClient = require('./HttpClient');
         data.namaSiswa = connection.player.username;
-        console.log(data)
-        axios
-            .post('http://103.181.142.138:8000/submit-jawaban', {
-                data
-            })
-            .then(res => {
-                //console.log(`statusCode: ${res.status}`)
-                //console.log(res)
-                console.log("Berhasil di kirim jawaban")
-            })
-            .catch(error => {
-                console.log(error)
-                console.log("Error di kirim jawaban")
-            })
-        //console.log(connection)
-        //connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
+        console.log(data);
+        
+        try {
+            const res = await httpClient.post('/submit-jawaban', { data });
+            console.log("Berhasil di kirim jawaban");
+        } catch (error) {
+            console.log(error);
+            console.log("Error di kirim jawaban");
+        }
     }
 
     shuffle(array) {

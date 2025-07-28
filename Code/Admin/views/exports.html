@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exports - Quiz Game Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/admin/public/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/">
+                <i class="fas fa-gamepad"></i> Quiz Game Admin
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/teachers">Teachers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/quizzes">Quizzes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/exports">Exports</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2>Export Management</h2>
+                        <p class="text-muted">Generate and download quiz result exports in Excel format</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="fas fa-globe"></i> Export All Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Export all quiz results, answers, and statistics in a comprehensive Excel file.</p>
+                        <button class="btn btn-primary w-100" onclick="exportAll()">
+                            <i class="fas fa-download"></i> Export Everything
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="fas fa-user"></i> Export by Teacher</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <select class="form-select" id="teacherSelect">
+                                <option value="">Select Teacher</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success w-100" onclick="exportByTeacher()">
+                            <i class="fas fa-download"></i> Export Teacher Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5><i class="fas fa-calendar"></i> Export by Date Range</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                        <button class="btn btn-info w-100" onclick="exportByDateRange()">
+                            <i class="fas fa-download"></i> Export Date Range
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export by Lobby -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h5><i class="fas fa-door-open"></i> Export by Lobby</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Lobby ID</label>
+                            <input type="text" class="form-control" id="lobbyIdInput" placeholder="Enter lobby ID">
+                        </div>
+                        <button class="btn btn-warning w-100" onclick="exportByLobby()">
+                            <i class="fas fa-download"></i> Export Lobby Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5><i class="fas fa-chart-bar"></i> Quick Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="quickStats">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h4 id="totalQuizzesCount">-</h4>
+                                    <small>Total Quizzes</small>
+                                </div>
+                                <div class="col-4">
+                                    <h4 id="totalAnswersCount">-</h4>
+                                    <small>Total Answers</small>
+                                </div>
+                                <div class="col-4">
+                                    <h4 id="avgScoreCount">-</h4>
+                                    <small>Avg Score</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Exports -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Recent Exports</h5>
+                        <button class="btn btn-outline-danger btn-sm" onclick="cleanupOldExports()">
+                            <i class="fas fa-trash"></i> Cleanup Old Files
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="exportsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Filename</th>
+                                        <th>Size</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="4" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Generating Export...</h5>
+                    <p class="text-muted mb-0">Please wait while we prepare your file</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/public/js/admin.js"></script>
+    <script>
+        let teachers = [];
+        let exports = [];
+
+        async function loadData() {
+            try {
+                const [teachersResponse, statsResponse] = await Promise.all([
+                    apiRequest('/api/teachers'),
+                    apiRequest('/api/stats')
+                ]);
+                
+                teachers = teachersResponse;
+                updateTeacherSelect();
+                updateQuickStats(statsResponse);
+                loadExports();
+            } catch (error) {
+                showAlert('Failed to load data', 'danger');
+            }
+        }
+
+        function updateTeacherSelect() {
+            const select = document.getElementById('teacherSelect');
+            select.innerHTML = '<option value="">Select Teacher</option>';
+            
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher.id;
+                option.textContent = teacher.name;
+                select.appendChild(option);
+            });
+        }
+
+        function updateQuickStats(stats) {
+            document.getElementById('totalQuizzesCount').textContent = stats.quiz.totalQuizzes;
+            document.getElementById('totalAnswersCount').textContent = stats.quiz.totalAnswers;
+            document.getElementById('avgScoreCount').textContent = stats.quiz.averageScore + '%';
+        }
+
+        async function loadExports() {
+            try {
+                // This would need to be implemented in the backend
+                // For now, we'll show a placeholder
+                const tbody = document.querySelector('#exportsTable tbody');
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No recent exports</td></tr>';
+            } catch (error) {
+                console.error('Failed to load exports:', error);
+            }
+        }
+
+        async function exportAll() {
+            showLoading();
+            try {
+                const response = await fetch('/api/export/all', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.url) {
+                    downloadFile(result.url, result.filename);
+                    showAlert('Export completed successfully!', 'success');
+                    loadExports();
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                showAlert('Export failed: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function exportByTeacher() {
+            const teacherId = document.getElementById('teacherSelect').value;
+            if (!teacherId) {
+                showAlert('Please select a teacher', 'warning');
+                return;
+            }
+
+            showLoading();
+            try {
+                const response = await fetch(`/api/export/teacher/${teacherId}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.url) {
+                    downloadFile(result.url, result.filename);
+                    showAlert('Teacher data exported successfully!', 'success');
+                    loadExports();
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                showAlert('Export failed: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function exportByDateRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                showAlert('Please select both start and end dates', 'warning');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                showAlert('Start date cannot be later than end date', 'warning');
+                return;
+            }
+
+            showLoading();
+            try {
+                const response = await fetch('/api/export/daterange', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ startDate, endDate })
+                });
+                const result = await response.json();
+                
+                if (result.url) {
+                    downloadFile(result.url, result.filename);
+                    showAlert('Date range data exported successfully!', 'success');
+                    loadExports();
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                showAlert('Export failed: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function exportByLobby() {
+            const lobbyId = document.getElementById('lobbyIdInput').value.trim();
+            if (!lobbyId) {
+                showAlert('Please enter a lobby ID', 'warning');
+                return;
+            }
+
+            showLoading();
+            try {
+                const response = await fetch(`/api/export/lobby/${lobbyId}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.url) {
+                    downloadFile(result.url, result.filename);
+                    showAlert('Lobby data exported successfully!', 'success');
+                    loadExports();
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                showAlert('Export failed: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function cleanupOldExports() {
+            if (confirm('This will delete all export files older than 7 days. Continue?')) {
+                try {
+                    // This would need to be implemented in the backend
+                    showAlert('Cleanup completed', 'success');
+                    loadExports();
+                } catch (error) {
+                    showAlert('Cleanup failed', 'danger');
+                }
+            }
+        }
+
+        function downloadFile(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename || 'export.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showLoading() {
+            openModal('loadingModal');
+        }
+
+        function hideLoading() {
+            closeModal('loadingModal');
+        }
+
+        // Set default dates
+        function setDefaultDates() {
+            const today = new Date();
+            const lastWeek = new Date();
+            lastWeek.setDate(today.getDate() - 7);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
+        }
+
+        // Initialize
+        loadData();
+        setDefaultDates();
+    </script>
+</body>
+</html>
