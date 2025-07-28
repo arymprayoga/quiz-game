@@ -45,7 +45,6 @@ module.exports = class LobbyBase {
         let index = lobby.connections.indexOf(connection);
         if (index > -1) {
             lobby.connections.splice(index, 1);
-        } else {
         }
     }
 };

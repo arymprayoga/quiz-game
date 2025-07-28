@@ -23,7 +23,17 @@ npx nodemon index.js
 npm install
 ```
 
-Note: There are no configured test, lint, or build scripts in package.json.
+**Run linter:**
+```bash
+npm run lint
+```
+
+**Fix linting issues automatically:**
+```bash
+npm run lint:fix
+```
+
+Note: There are no configured test or build scripts in package.json.
 
 ## Architecture
 
@@ -93,7 +103,7 @@ The server integrates with `http://103.181.142.138:8000` for:
 ### Performance Optimizations
 
 - **HTTP Client**: Singleton axios instance with connection pooling and caching
-- **Event Throttling**: Position updates limited to 10/sec, whiteboard to 20/sec
+- **Event Throttling**: Position updates optimized to 55.6Hz (18ms) to match client rate, whiteboard to 20/sec, with real-time debugging
 - **Memory Management**: Automatic cleanup every 5 minutes, connection limits (50/lobby)
 - **Modular Architecture**: Event handlers split into focused modules
 - **Error Handling**: Comprehensive logging with Winston, circuit breakers for APIs

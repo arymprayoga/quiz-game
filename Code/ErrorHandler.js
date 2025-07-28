@@ -13,7 +13,7 @@ class ErrorHandler {
                 type: 'uncaughtException',
                 fatal: true
             });
-            
+
             // Give the logger time to write before exiting
             setTimeout(() => {
                 process.exit(1);
@@ -44,15 +44,15 @@ class ErrorHandler {
     // Graceful shutdown
     gracefulShutdown() {
         const memoryManager = require('./MemoryManager');
-        
+
         logger.info('Starting graceful shutdown...');
-        
+
         // Stop memory cleanup
         memoryManager.stopPeriodicCleanup();
-        
+
         // Log final stats
         memoryManager.logMemoryUsage();
-        
+
         setTimeout(() => {
             process.exit(0);
         }, 2000);
@@ -186,7 +186,7 @@ class ErrorHandler {
             onFailure() {
                 this.failures++;
                 this.lastFailureTime = Date.now();
-                
+
                 if (this.failures >= maxFailures) {
                     this.state = 'OPEN';
                     logger.warn('Circuit breaker opened', {

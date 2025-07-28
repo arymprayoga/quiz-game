@@ -12,17 +12,17 @@ class EventThrottler {
             this.throttles.set(key, { lastCall: now });
             return func();
         }
-        
+
         // Event was throttled - optionally store last attempt for batching
         if (throttleData.pending) {
             clearTimeout(throttleData.pending);
         }
-        
+
         throttleData.pending = setTimeout(() => {
             this.throttles.set(key, { lastCall: Date.now() });
             func();
         }, limit - (now - throttleData.lastCall));
-        
+
         return false; // Indicates event was throttled
     }
 

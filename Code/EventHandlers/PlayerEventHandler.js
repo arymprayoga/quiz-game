@@ -5,12 +5,12 @@ class PlayerEventHandler {
         // Position updates (throttled)
         socket.on('updatePosition', function (data) {
             const throttleKey = `position_${connection.player.id}`;
-            
+
             // Update player position immediately for local state
             player.position.x = data.position.x;
             player.position.y = data.position.y;
 
-            // Throttle broadcast to other players (max 10 updates/second)
+            // Throttle broadcast to other players (18ms = 55.6Hz)
             eventThrottler.throttle(throttleKey, () => {
                 try {
                     socket.broadcast.to(connection.lobby.id).emit('updatePosition', player);
@@ -18,7 +18,7 @@ class PlayerEventHandler {
                     console.log(error);
                     socket.emit('errorPesan');
                 }
-            }, 100); // 100ms throttle
+            }, 18);
         });
 
         // Chair/seat updates
@@ -33,24 +33,25 @@ class PlayerEventHandler {
         });
 
         // Raise hand
-        socket.on('raiseHand', function (data) {
+        socket.on('raiseHand', function (_data) {
             console.log('test raise hand');
             socket.broadcast.to(connection.lobby.id).emit('raiseHand', player);
             console.log('test raise hand2');
         });
 
         // Global mute
-        socket.on('globalMute', function (data) {
+        socket.on('globalMute', function (_data) {
             console.log('mute global');
             socket.broadcast.to(connection.lobby.id).emit('globalMute');
         });
+
 
         // Disconnect handler with cleanup
         socket.on('disconnect', function () {
             // Cleanup throttle data for this player
             eventThrottler.cleanup(`position_${connection.player.id}`);
             eventThrottler.cleanup(`whiteboard_${connection.player.id}`);
-            
+
             server.onDisconnected(connection);
         });
     }

@@ -59,12 +59,12 @@ healthMonitor.start();
 
 io.on('connection', function (socket) {
     const ErrorHandler = require('./Code/ErrorHandler');
-    
+
     try {
         let connection = server.onConnected(socket);
         connection.createEvents();
         connection.socket.emit('register', { id: connection.player.id, type: connection.player.type });
-        
+
         logger.info('Player connected', {
             playerId: connection.player.id,
             playerType: connection.player.type,

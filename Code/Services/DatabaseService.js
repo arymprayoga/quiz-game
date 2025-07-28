@@ -37,7 +37,7 @@ class DatabaseService {
                 email TEXT UNIQUE NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )`,
-            
+
             // Quizzes table
             `CREATE TABLE IF NOT EXISTS quizzes (
                 id TEXT PRIMARY KEY,
@@ -50,7 +50,7 @@ class DatabaseService {
                 status TEXT DEFAULT 'active',
                 FOREIGN KEY (teacher_id) REFERENCES teachers (id)
             )`,
-            
+
             // Answers table
             `CREATE TABLE IF NOT EXISTS answers (
                 id TEXT PRIMARY KEY,
@@ -62,7 +62,7 @@ class DatabaseService {
                 submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (quiz_id) REFERENCES quizzes (id)
             )`,
-            
+
             // Books table with category - using INTEGER id for Unity compatibility
             `CREATE TABLE IF NOT EXISTS books (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,7 +96,7 @@ class DatabaseService {
             } else {
                 console.log(`Table ${index + 1} created successfully`);
             }
-            
+
             // Continue with next table
             this.executeTablesSerially(tables, index + 1);
         });
@@ -104,7 +104,7 @@ class DatabaseService {
 
     insertDefaultData() {
         // Check if admin user exists
-        this.db.get("SELECT id FROM teachers WHERE username = 'admin'", (err, row) => {
+        this.db.get('SELECT id FROM teachers WHERE username = \'admin\'', (err, row) => {
             if (err) {
                 console.error('Error checking admin user:', err);
                 return;
@@ -161,7 +161,7 @@ class DatabaseService {
                 console.error('Error checking books count:', err);
                 return;
             }
-            
+
             if (row && row.count > 0) {
                 console.log(`Books table already has ${row.count} books, skipping sample data insertion`);
                 return;

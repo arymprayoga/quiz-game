@@ -1,9 +1,9 @@
 const eventThrottler = require('../EventThrottler');
 
 class WhiteboardEventHandler {
-    static register(socket, connection, server, player) {
+    static register(socket, connection, server, _player) {
         // Open whiteboard
-        socket.on('openWhiteboard', function (data) {
+        socket.on('openWhiteboard', function (_data) {
             console.log('open whiteboard');
             connection.lobby.settings.whiteboard = true;
 
@@ -12,7 +12,7 @@ class WhiteboardEventHandler {
         });
 
         // Close whiteboard
-        socket.on('closeWhiteboard', function (data) {
+        socket.on('closeWhiteboard', function (_data) {
             console.log('close whiteboard');
             connection.lobby.settings.whiteboard = false;
 
@@ -21,7 +21,7 @@ class WhiteboardEventHandler {
         });
 
         // Clear whiteboard
-        socket.on('clearWhiteboard', function (data) {
+        socket.on('clearWhiteboard', function (_data) {
             console.log('clear whiteboard');
             connection.lobby.settings.whiteboardData = '';
 
@@ -32,9 +32,9 @@ class WhiteboardEventHandler {
         // Draw on whiteboard (throttled)
         socket.on('drawWhiteboard', function (data) {
             const throttleKey = `whiteboard_${connection.player.id}`;
-            
+
             console.log('drawing data');
-            
+
             // Throttle whiteboard drawing to prevent spam (max 20 draws/second)
             eventThrottler.throttle(throttleKey, () => {
                 server.onDrawWhiteboard(connection, data);
@@ -42,7 +42,7 @@ class WhiteboardEventHandler {
         });
 
         // Show whiteboard
-        socket.on('showWhiteboard', function (data) {
+        socket.on('showWhiteboard', function (_data) {
             console.log('showing whiteboard data');
             socket.emit('showWhiteboard', connection.lobby.settings.whiteboardData);
         });
@@ -58,7 +58,7 @@ class WhiteboardEventHandler {
         });
 
         // Check whiteboard state
-        socket.on('checkState', function (data) {
+        socket.on('checkState', function (_data) {
             console.log('check state data');
 
             let dataCompile = {

@@ -11,7 +11,7 @@ module.exports = class GameLobby extends LobbyBase {
 
     // onUpdate method removed - using event-driven architecture for better performance
 
-    canEnterLobby(connection = Connection) {
+    canEnterLobby(_connection = Connection) {
         let lobby = this;
         let maxPlayerCount = lobby.settings.maxPlayers;
         let currentPlayerCount = lobby.connections.length;
@@ -30,24 +30,24 @@ module.exports = class GameLobby extends LobbyBase {
 
         // Check connection limit before allowing entry
         if (!memoryManager.checkConnectionLimit(lobby, 50)) {
-            socket.emit('errorPesan', { 
-                message: 'Lobby is full. Maximum 50 players allowed.' 
+            socket.emit('errorPesan', {
+                message: 'Lobby is full. Maximum 50 players allowed.'
             });
             return false;
         }
 
         super.onEnterLobby(connection);
-        
+
         const players = this.connections.map(c => c.player).map(c => {
             return {
                 id: c.id,
-                type: c.type,
-            }
+                type: c.type
+            };
         });
-        
+
         console.log('Players in lobby:', players.length);
         lobby.spawnPlayers(connection);
-        
+
         return true;
     }
 
@@ -64,15 +64,15 @@ module.exports = class GameLobby extends LobbyBase {
         let connections = lobby.connections;
         let socket = connection.socket;
         const data = {
-                    id: connection.player.id,
-                    name: connection.player.username,
-                    type: connection.player.type,
-                    idLobby: connection.lobby.id,
-                    serverID: connection.player.serverID,
-                    position: connection.player.position,
-                    isSit: connection.player.isSit
-                };
-        console.log('emit spawn here')
+            id: connection.player.id,
+            name: connection.player.username,
+            type: connection.player.type,
+            idLobby: connection.lobby.id,
+            serverID: connection.player.serverID,
+            position: connection.player.position,
+            isSit: connection.player.isSit
+        };
+        console.log('emit spawn here');
         socket.emit('spawn', data);
         socket.broadcast.to(lobby.id).emit('spawn', data);
         connections.forEach(c => {
@@ -94,7 +94,7 @@ module.exports = class GameLobby extends LobbyBase {
         let lobby = this;
 
         connection.socket.broadcast.to(lobby.id).emit('disconnected', {
-            id: connection.player.id,
+            id: connection.player.id
         });
     }
 };

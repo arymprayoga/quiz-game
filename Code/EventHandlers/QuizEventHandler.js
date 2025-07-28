@@ -1,5 +1,5 @@
 class QuizEventHandler {
-    static register(socket, connection, server, player) {
+    static register(socket, connection, server, _player) {
         // Submit quiz question
         socket.on('submitSoal', function (data) {
             if (connection.lobby.settings.quiz) {

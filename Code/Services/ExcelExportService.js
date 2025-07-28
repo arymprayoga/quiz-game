@@ -14,29 +14,29 @@ class ExcelExportService {
         }
     }
 
-    async exportQuizResults(quizzes, answers, options = {}) {
+    async exportQuizResults(quizzes, answers, _options = {}) {
         const workbook = XLSX.utils.book_new();
-        
+
         // Sheet 1: Quiz Summary
         const quizSummary = this.createQuizSummarySheet(quizzes, answers);
         XLSX.utils.book_append_sheet(workbook, quizSummary, 'Quiz Summary');
-        
+
         // Sheet 2: Detailed Results
         const detailedResults = this.createDetailedResultsSheet(quizzes, answers);
         XLSX.utils.book_append_sheet(workbook, detailedResults, 'Detailed Results');
-        
+
         // Sheet 3: Student Performance
         const studentPerformance = this.createStudentPerformanceSheet(answers);
         XLSX.utils.book_append_sheet(workbook, studentPerformance, 'Student Performance');
-        
+
         // Generate filename
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
         const filename = `quiz-results-${timestamp}.xlsx`;
         const filePath = path.join(this.uploadsDir, filename);
-        
+
         // Write file
         XLSX.writeFile(workbook, filePath);
-        
+
         return {
             filename,
             path: filePath,
@@ -47,9 +47,9 @@ class ExcelExportService {
     createQuizSummarySheet(quizzes, answers) {
         const data = quizzes.map(quiz => {
             const quizAnswers = answers.filter(a => a.quizId === quiz.id);
-            const avgScore = quizAnswers.length > 0 ? 
+            const avgScore = quizAnswers.length > 0 ?
                 Math.round(quizAnswers.reduce((sum, a) => sum + a.score, 0) / quizAnswers.length) : 0;
-            
+
             return {
                 'Quiz ID': quiz.id,
                 'Title': quiz.title,
@@ -62,21 +62,21 @@ class ExcelExportService {
                 'Status': quiz.status
             };
         });
-        
+
         return XLSX.utils.json_to_sheet(data);
     }
 
     createDetailedResultsSheet(quizzes, answers) {
         const data = [];
-        
+
         answers.forEach(answer => {
             const quiz = quizzes.find(q => q.id === answer.quizId);
             if (!quiz) return;
-            
+
             answer.answers.forEach((userAnswer, questionIndex) => {
                 const question = quiz.questions[questionIndex];
                 if (!question) return;
-                
+
                 data.push({
                     'Answer ID': answer.id,
                     'Quiz ID': answer.quizId,
@@ -93,13 +93,13 @@ class ExcelExportService {
                 });
             });
         });
-        
+
         return XLSX.utils.json_to_sheet(data);
     }
 
     createStudentPerformanceSheet(answers) {
         const studentStats = {};
-        
+
         // Calculate stats per student
         answers.forEach(answer => {
             const studentName = answer.studentName;
@@ -111,12 +111,12 @@ class ExcelExportService {
                     scores: []
                 };
             }
-            
+
             studentStats[studentName].totalQuizzes++;
             studentStats[studentName].totalScore += answer.score;
             studentStats[studentName].scores.push(answer.score);
         });
-        
+
         // Convert to array with calculated averages
         const data = Object.values(studentStats).map(student => ({
             'Student Name': student.name,
@@ -126,26 +126,26 @@ class ExcelExportService {
             'Worst Score': Math.min(...student.scores),
             'Total Points': student.totalScore
         }));
-        
+
         // Sort by average score descending
         data.sort((a, b) => b['Average Score'] - a['Average Score']);
-        
+
         return XLSX.utils.json_to_sheet(data);
     }
 
     async exportQuizByTeacher(teacherId, quizzes, answers) {
         const teacherQuizzes = quizzes.filter(q => q.teacherId === teacherId);
-        const teacherAnswers = answers.filter(a => 
+        const teacherAnswers = answers.filter(a =>
             teacherQuizzes.some(q => q.id === a.quizId)
         );
-        
+
         return this.exportQuizResults(teacherQuizzes, teacherAnswers);
     }
 
     async exportQuizByLobby(lobbyId, quizzes, answers) {
         const lobbyQuizzes = quizzes.filter(q => q.lobbyId === lobbyId);
         const lobbyAnswers = answers.filter(a => a.lobbyId === lobbyId);
-        
+
         return this.exportQuizResults(lobbyQuizzes, lobbyAnswers);
     }
 
@@ -154,11 +154,11 @@ class ExcelExportService {
             const quizDate = new Date(q.createdAt);
             return quizDate >= new Date(startDate) && quizDate <= new Date(endDate);
         });
-        
-        const filteredAnswers = answers.filter(a => 
+
+        const filteredAnswers = answers.filter(a =>
             filteredQuizzes.some(q => q.id === a.quizId)
         );
-        
+
         return this.exportQuizResults(filteredQuizzes, filteredAnswers);
     }
 
@@ -188,18 +188,18 @@ class ExcelExportService {
             const files = fs.readdirSync(this.uploadsDir);
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - daysOld);
-            
+
             let deletedCount = 0;
             files.forEach(file => {
                 const filePath = path.join(this.uploadsDir, file);
                 const stats = fs.statSync(filePath);
-                
+
                 if (stats.mtime < cutoffDate) {
                     fs.unlinkSync(filePath);
                     deletedCount++;
                 }
             });
-            
+
             return deletedCount;
         } catch (error) {
             console.error('Error cleaning up old exports:', error);

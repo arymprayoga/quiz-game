@@ -18,7 +18,7 @@ module.exports = class Server {
         // Initialize memory management
         const memoryManager = require('./MemoryManager');
         memoryManager.startPeriodicCleanup();
-        
+
         console.log('Server initialized with enhanced memory management');
     }
 
@@ -56,7 +56,7 @@ module.exports = class Server {
         // Broadcast disconnect to other players
         try {
             connection.socket.broadcast.to(connection.player.lobby).emit('disconnected', {
-                id: id,
+                id: id
             });
         } catch (error) {
             console.error('Error broadcasting disconnect:', error.message);
@@ -66,7 +66,7 @@ module.exports = class Server {
         let currentLobbyIndex = connection.player.lobby;
         if (server.lobbys[currentLobbyIndex]) {
             server.lobbys[currentLobbyIndex].onLeaveLobby(connection);
-            
+
             // Enhanced lobby cleanup - check if lobby should be closed
             if (
                 server.lobbys[currentLobbyIndex].id != server.generalServerID &&
@@ -74,7 +74,7 @@ module.exports = class Server {
                 server.lobbys[currentLobbyIndex].connections.length == 0
             ) {
                 console.log('Closing down lobby (' + currentLobbyIndex + ')');
-                
+
                 // Enhanced cleanup for the lobby
                 memoryManager.cleanupLobby(server.lobbys[currentLobbyIndex]);
                 delete server.lobbys[currentLobbyIndex];
@@ -145,9 +145,8 @@ module.exports = class Server {
         lobbys[lobbyID].onEnterLobby(connection);
     }
 
-    onSwitchLobbyDiskusi(connection = Connection, data) {
+    onSwitchLobbyDiskusi(connection = Connection, _data) {
         if (connection.lobby.connections.length > 1 && connection.player.type == 1) {
-            let server = this;
             let oldLobbyId = connection.lobby.id;
             let playerCount = connection.lobby.connections.length - 1;
             let connections = connection.lobby.connections;
@@ -206,7 +205,7 @@ module.exports = class Server {
     }
 
     onMoveToDiskusi(connection = Connection, data) {
-        console.log("Movetodiskusi awal");
+        console.log('Movetodiskusi awal');
         let connections = connection.player;
         connections.lobbyDiskusi = data;
         let obj = {};
@@ -214,7 +213,7 @@ module.exports = class Server {
         obj.idPlayer = connections.id;
 
         connection.socket.broadcast.to(connection.lobby.id).emit('moveToDiskusi', obj);
-        console.log("Movetodiskusi " + connections.id);
+        console.log('Movetodiskusi ' + connections.id);
     }
 
     onMoveRuangan(connection = Connection, data) {
@@ -235,12 +234,12 @@ module.exports = class Server {
             hasil[i] = obj2;
             obj2 = {};
         }
-        console.log("Moveruangan guru");
+        console.log('Moveruangan guru');
         connection.socket.emit('moveRuangan', { hasil });
         connection.socket.broadcast.to(connection.lobby.id).emit('moveToDiskusi', obj);
     }
 
-    onReturnToKelas(connection = Connection, data) {
+    onReturnToKelas(connection = Connection, _data) {
         let idKelas = connection.lobby.id;
 
         connection.lobby.settings.deletable = true;
@@ -262,15 +261,15 @@ module.exports = class Server {
         data.idLobby = connection.lobby.id;
         data.namaGuru = connection.player.username;
         data.serverID = connection.player.serverID;
-        
+
         try {
             const res = await httpClient.post('/submit-soal', { data });
             data.kodeSoal = res.data;
-            console.log("Berhasil di kirim soal");
+            console.log('Berhasil di kirim soal');
             connection.socket.broadcast.to(connection.lobby.id).emit('submitSoal', data);
         } catch (error) {
             console.log(error);
-            console.log("Error di kirim soal");
+            console.log('Error di kirim soal');
         }
     }
 
@@ -278,13 +277,13 @@ module.exports = class Server {
         const httpClient = require('./HttpClient');
         data.namaSiswa = connection.player.username;
         console.log(data);
-        
+
         try {
-            const res = await httpClient.post('/submit-jawaban', { data });
-            console.log("Berhasil di kirim jawaban");
+            await httpClient.post('/submit-jawaban', { data });
+            console.log('Berhasil di kirim jawaban');
         } catch (error) {
             console.log(error);
-            console.log("Error di kirim jawaban");
+            console.log('Error di kirim jawaban');
         }
     }
 

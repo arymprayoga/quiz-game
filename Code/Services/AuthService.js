@@ -8,7 +8,7 @@ class AuthService {
                 'SELECT * FROM teachers WHERE username = ?',
                 [username]
             );
-            
+
             if (!teacher) {
                 return null;
             }
@@ -22,7 +22,7 @@ class AuthService {
                     email: teacher.email
                 };
             }
-            
+
             return null;
         } catch (error) {
             console.error('Error authenticating teacher:', error);
@@ -37,20 +37,20 @@ class AuthService {
                 'SELECT id FROM teachers WHERE username = ? OR email = ?',
                 [teacherData.username, teacherData.email]
             );
-            
+
             if (existingTeacher) {
                 throw new Error('Username or email already exists');
             }
 
             // Hash password
             const hashedPassword = await bcrypt.hash(teacherData.password, 10);
-            
+
             const result = await db.run(
                 `INSERT INTO teachers (username, name, password, email) 
                  VALUES (?, ?, ?, ?)`,
                 [teacherData.username, teacherData.name, hashedPassword, teacherData.email]
             );
-            
+
             return {
                 id: result.id,
                 username: teacherData.username,
@@ -93,12 +93,12 @@ class AuthService {
             }
 
             updateValues.push(id);
-            
+
             await db.run(
                 `UPDATE teachers SET ${updateFields.join(', ')} WHERE id = ?`,
                 updateValues
             );
-            
+
             return {
                 id: teacher.id,
                 username: teacher.username,
@@ -114,7 +114,7 @@ class AuthService {
     async deleteTeacher(id) {
         try {
             const result = await db.run('DELETE FROM teachers WHERE id = ?', [id]);
-            
+
             if (result.changes === 0) {
                 throw new Error('Teacher not found');
             }

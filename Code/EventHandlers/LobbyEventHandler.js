@@ -1,7 +1,7 @@
 const httpClient = require('../HttpClient');
 
 class LobbyEventHandler {
-    static register(socket, connection, server, player) {
+    static register(socket, connection, server, _player) {
         // Create lobby event
         socket.on('createLobby', async (data) => {
             if (data.name && data.password) {
@@ -20,10 +20,10 @@ class LobbyEventHandler {
                 } catch (error) {
                     console.log(error);
                     socket.emit('gagalLogin');
-                    console.log("Error Login");
+                    console.log('Error Login');
                 }
             } else if (!data.name || !data.password) {
-                console.log("error");
+                console.log('error');
                 socket.emit('gagalLogin');
             }
         });
@@ -55,11 +55,11 @@ class LobbyEventHandler {
         });
 
         // Player list
-        socket.on('playerList', function(data) {
+        socket.on('playerList', function(_data) {
             console.log('player list gais');
 
             let playersArray = [];
-            
+
             connection.lobby.connections.forEach(element => {
                 let playerObject = {
                     username: element.player.username,

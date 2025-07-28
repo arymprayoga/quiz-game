@@ -11,7 +11,7 @@ class HealthMonitor {
     start() {
         this.server = http.createServer((req, res) => {
             const url = req.url;
-            
+
             res.setHeader('Content-Type', 'application/json');
             res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -39,7 +39,7 @@ class HealthMonitor {
     }
 
     handleHealth(req, res) {
-        const memoryManager = require('./MemoryManager');
+        require('./MemoryManager');
         const httpClient = require('./HttpClient');
         const eventThrottler = require('./EventThrottler');
 
@@ -67,7 +67,7 @@ class HealthMonitor {
 
     handleMemory(req, res) {
         const memoryManager = require('./MemoryManager');
-        
+
         // Force cleanup if requested
         if (req.method === 'POST') {
             memoryManager.performCleanup();

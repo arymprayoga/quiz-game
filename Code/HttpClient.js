@@ -82,7 +82,7 @@ class HttpClient {
     // API methods
     async post(url, data, useCache = false) {
         const cacheKey = this.getCacheKey('POST', url, data);
-        
+
         if (useCache) {
             const cached = this.getCache(cacheKey);
             if (cached) {
@@ -91,17 +91,17 @@ class HttpClient {
         }
 
         const response = await this.client.post(url, data);
-        
+
         if (useCache) {
             this.setCache(cacheKey, response.data);
         }
-        
+
         return response;
     }
 
     async get(url, useCache = true) {
         const cacheKey = this.getCacheKey('GET', url);
-        
+
         if (useCache) {
             const cached = this.getCache(cacheKey);
             if (cached) {
@@ -110,11 +110,11 @@ class HttpClient {
         }
 
         const response = await this.client.get(url);
-        
+
         if (useCache) {
             this.setCache(cacheKey, response.data);
         }
-        
+
         return response;
     }
 

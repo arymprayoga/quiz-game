@@ -10,7 +10,7 @@ router.post('/login-game', async (req, res) => {
     try {
         const { username, password } = req.body;
         const teacher = await AuthService.authenticateTeacher(username, password);
-        
+
         if (teacher) {
             res.json({
                 id: teacher.id,
@@ -54,7 +54,7 @@ router.get('/download-buku/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const downloadUrl = await BookService.getDownloadUrl(id);
-        
+
         // Return full download URL
         const fullUrl = downloadUrl ? `${req.protocol}://${req.get('host')}${downloadUrl}` : '';
         res.json(fullUrl);
@@ -68,25 +68,25 @@ router.get('/list-buku/:data', async (req, res) => {
     try {
         const { data } = req.params;
         let books;
-        
+
         if (data === 'all') {
             books = await BookService.getAllBooks();
         } else {
             books = await BookService.getBooksByCategory(data);
         }
-        
+
         // Transform the response to match Unity game expectations
         const daftarBuku = books.map(book => ({
             id: book.id, // Already an integer from auto-increment
             name: book.title || '', // Use title as name
             path: book.downloadUrl ? `${req.protocol}://${req.get('host')}${book.downloadUrl}` : '' // Full download URL
         }));
-        
+
         // Return in the format expected by Unity game
         const jawaban = {
             daftarBuku: daftarBuku
         };
-        
+
         res.json(jawaban);
     } catch (error) {
         console.error('List books error:', error);
@@ -98,19 +98,19 @@ router.get('/search-buku/:data', async (req, res) => {
     try {
         const { data } = req.params;
         const books = await BookService.searchBooks(data);
-        
+
         // Transform the response to match Unity game expectations
         const daftarBuku = books.map(book => ({
             id: book.id, // Already an integer from auto-increment
             name: book.title || '', // Use title as name
             path: book.downloadUrl ? `${req.protocol}://${req.get('host')}${book.downloadUrl}` : '' // Full download URL
         }));
-        
+
         // Return in the format expected by Unity game
         const jawaban = {
             daftarBuku: daftarBuku
         };
-        
+
         res.json(jawaban);
     } catch (error) {
         console.error('Search books error:', error);
@@ -249,9 +249,9 @@ router.get('/stats', async (req, res) => {
             QuizService.getQuizStats(),
             BookService.getBookStats()
         ]);
-        
+
         const teachers = await AuthService.getAllTeachers();
-        
+
         res.json({
             quiz: quizStats,
             books: bookStats,

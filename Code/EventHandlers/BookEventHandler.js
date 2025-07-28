@@ -1,7 +1,7 @@
 const httpClient = require('../HttpClient');
 
 class BookEventHandler {
-    static register(socket, connection, server, player) {
+    static register(socket, _connection, _server, _player) {
         // Download book
         socket.on('downloadBuku', async function (data) {
             console.log(data);
@@ -11,7 +11,7 @@ class BookEventHandler {
                 console.log(res.data);
             } catch (error) {
                 console.log(error);
-                console.log("Error download buku");
+                console.log('Error download buku');
             }
         });
 
@@ -23,7 +23,7 @@ class BookEventHandler {
                 console.log(res.data);
             } catch (error) {
                 console.log(error);
-                console.log("Error di list buku");
+                console.log('Error di list buku');
             }
         });
 
@@ -35,7 +35,7 @@ class BookEventHandler {
                 console.log(res.data);
             } catch (error) {
                 console.log(error);
-                console.log("Error di kirim soal");
+                console.log('Error di kirim soal');
             }
         });
     }

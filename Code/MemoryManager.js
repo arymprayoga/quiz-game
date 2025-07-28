@@ -32,21 +32,21 @@ class MemoryManager {
     // Perform comprehensive cleanup
     performCleanup() {
         console.log('Starting periodic memory cleanup...');
-        
+
         const startTime = Date.now();
-        
+
         // Clean up HTTP cache
         this.cleanupHttpCache();
-        
+
         // Clean up event throttler
         this.cleanupEventThrottler();
-        
+
         // Force garbage collection if available
         this.suggestGarbageCollection();
-        
+
         const endTime = Date.now();
         console.log(`Memory cleanup completed in ${endTime - startTime}ms`);
-        
+
         // Log memory usage
         this.logMemoryUsage();
     }
@@ -55,18 +55,18 @@ class MemoryManager {
     cleanupHttpCache() {
         const httpClient = require('./HttpClient');
         const cacheBefore = httpClient.getCacheStats().size;
-        
+
         // Clear old cache entries (manual implementation since we have simple cache)
         const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
         let cleanedEntries = 0;
-        
+
         for (const [key, value] of httpClient.cache) {
             if (value.timestamp < fiveMinutesAgo) {
                 httpClient.cache.delete(key);
                 cleanedEntries++;
             }
         }
-        
+
         this.stats.cacheEntriesCleanedUp += cleanedEntries;
         console.log(`Cleaned ${cleanedEntries} old cache entries (${cacheBefore} -> ${httpClient.getCacheStats().size})`);
     }
@@ -75,11 +75,11 @@ class MemoryManager {
     cleanupEventThrottler() {
         const eventThrottler = require('./EventThrottler');
         const throttlesBefore = eventThrottler.getStats().activeThrottles;
-        
+
         // Clean up old throttle entries
         const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
         let cleanedThrottles = 0;
-        
+
         for (const [key, value] of eventThrottler.throttles) {
             if (value.lastCall < fiveMinutesAgo) {
                 if (value.pending) {
@@ -89,7 +89,7 @@ class MemoryManager {
                 cleanedThrottles++;
             }
         }
-        
+
         console.log(`Cleaned ${cleanedThrottles} old throttle entries (${throttlesBefore} -> ${eventThrottler.getStats().activeThrottles})`);
     }
 
@@ -132,7 +132,7 @@ class MemoryManager {
         if (lobby.connections) {
             lobby.connections.length = 0;
         }
-        
+
         if (lobby.settings) {
             // Clear large whiteboard data
             lobby.settings.whiteboardData = '';
@@ -159,7 +159,7 @@ class MemoryManager {
     getMemoryStats() {
         const httpClient = require('./HttpClient');
         const eventThrottler = require('./EventThrottler');
-        
+
         return {
             memory: process.memoryUsage(),
             cache: httpClient.getCacheStats(),

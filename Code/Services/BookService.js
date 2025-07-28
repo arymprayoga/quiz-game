@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { nanoid } = require('nanoid');
+// const { nanoid } = require('nanoid'); // Unused import
 const db = require('./DatabaseService');
 
 class BookService {
@@ -112,7 +112,7 @@ class BookService {
                     filePath ? this.getFileSize(filePath) : '0 MB'
                 ]
             );
-            
+
             return await this.getBookById(result.id);
         } catch (error) {
             console.error('Error creating book:', error);
@@ -164,7 +164,7 @@ class BookService {
                         fs.unlinkSync(oldFilePath);
                     }
                 }
-                
+
                 updateFields.push('download_url = ?');
                 updateValues.push(`/uploads/books/${path.basename(newFilePath)}`);
                 updateFields.push('file_size = ?');
@@ -176,12 +176,12 @@ class BookService {
             }
 
             updateValues.push(id);
-            
+
             await db.run(
                 `UPDATE books SET ${updateFields.join(', ')} WHERE id = ?`,
                 updateValues
             );
-            
+
             return await this.getBookById(id);
         } catch (error) {
             console.error('Error updating book:', error);
@@ -205,11 +205,11 @@ class BookService {
             }
 
             const result = await db.run('DELETE FROM books WHERE id = ?', [id]);
-            
+
             if (result.changes === 0) {
                 throw new Error('Book not found');
             }
-            
+
             return true;
         } catch (error) {
             console.error('Error deleting book:', error);
@@ -222,7 +222,7 @@ class BookService {
         if (!book) {
             throw new Error('Book not found');
         }
-        
+
         return book.downloadUrl;
     }
 
@@ -230,15 +230,15 @@ class BookService {
         try {
             const stats = fs.statSync(filePath);
             const bytes = stats.size;
-            
+
             if (bytes === 0) return '0 Bytes';
-            
+
             const k = 1024;
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            
+
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        } catch (error) {
+        } catch {
             return '0 MB';
         }
     }
@@ -251,22 +251,22 @@ class BookService {
                 db.all('SELECT grade, COUNT(*) as count FROM books GROUP BY grade'),
                 db.all('SELECT category, COUNT(*) as count FROM books GROUP BY category')
             ]);
-            
+
             const subjects = {};
             subjectStats.forEach(stat => {
                 subjects[stat.subject] = stat.count;
             });
-            
+
             const grades = {};
             gradeStats.forEach(stat => {
                 grades[stat.grade] = stat.count;
             });
-            
+
             const categories = {};
             categoryStats.forEach(stat => {
                 categories[stat.category] = stat.count;
             });
-            
+
             return {
                 totalBooks: books.total,
                 bySubject: subjects,

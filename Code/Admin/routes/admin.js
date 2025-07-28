@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['.pdf', '.doc', '.docx', '.txt'];
@@ -56,16 +56,16 @@ router.get('/login', (req, res) => {
 
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    
+
     try {
         const teacher = await AuthService.authenticateTeacher(username, password);
-        
+
         if (teacher) {
             req.session.authenticated = true;
-            req.session.user = { 
-                username: teacher.username, 
+            req.session.user = {
+                username: teacher.username,
                 name: teacher.name,
-                id: teacher.id 
+                id: teacher.id
             };
             res.json({ success: true });
         } else {
@@ -122,7 +122,7 @@ router.post('/books/upload', requireAuth, upload.single('bookFile'), handleMulte
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        
+
         const bookData = {
             title: req.body.title,
             author: req.body.author,
@@ -131,7 +131,7 @@ router.post('/books/upload', requireAuth, upload.single('bookFile'), handleMulte
             grade: req.body.grade,
             description: req.body.description
         };
-        
+
         const book = await BookService.createBook(bookData, req.file.path);
         res.json(book);
     } catch (error) {
@@ -150,7 +150,7 @@ router.put('/books/:id', requireAuth, upload.single('bookFile'), handleMulterErr
             grade: req.body.grade,
             description: req.body.description
         };
-        
+
         const book = await BookService.updateBook(req.params.id, updateData, req.file ? req.file.path : null);
         res.json(book);
     } catch (error) {
