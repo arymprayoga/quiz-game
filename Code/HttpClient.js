@@ -1,5 +1,5 @@
 const axios = require('axios');
-const ErrorHandler = require('./ErrorHandler');
+const errorHandler = require('./ErrorHandler');
 
 class HttpClient {
     constructor() {
@@ -35,7 +35,7 @@ class HttpClient {
                 return response;
             },
             error => {
-                ErrorHandler.handleHttpError(error, {
+                errorHandler.ErrorHandler.handleHttpError(error, {
                     component: 'HttpClient'
                 });
                 return Promise.reject(error);

@@ -15,7 +15,8 @@ module.exports = {
         env_production: {
             NODE_ENV: 'production',
             PORT: 4000,
-            HEALTH_PORT: 4001
+            HEALTH_PORT: 4001,
+            API_BASE_URL: process.env.API_BASE_URL || 'http://103.181.142.138:8000'
         },
 
         // Process management

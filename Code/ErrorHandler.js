@@ -199,4 +199,6 @@ class ErrorHandler {
     }
 }
 
-module.exports = new ErrorHandler();
+const instance = new ErrorHandler();
+instance.ErrorHandler = ErrorHandler; // Expose the class
+module.exports = instance;

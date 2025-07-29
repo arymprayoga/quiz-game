@@ -70,8 +70,8 @@ jobs:
           # Stop existing application
           pm2 stop quiz-game || true
           
-          # Start application with PM2
-          pm2 start ecosystem.config.js --env production
+          # Set environment variable and start application with PM2
+          API_BASE_URL="http://${{ secrets.SSH_HOST }}:8000" pm2 start ecosystem.config.js --env production
           
           # Save PM2 configuration
           pm2 save
