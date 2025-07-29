@@ -55,8 +55,9 @@ router.get('/download-buku/:id', async (req, res) => {
         const { id } = req.params;
         const downloadUrl = await BookService.getDownloadUrl(id);
 
-        // Return full download URL
-        const fullUrl = downloadUrl ? `${req.protocol}://${req.get('host')}${downloadUrl}` : '';
+        // Return full download URL using public host
+        const publicHost = process.env.PUBLIC_HOST || req.get('host');
+        const fullUrl = downloadUrl ? `${req.protocol}://${publicHost}${downloadUrl}` : '';
         res.json(fullUrl);
     } catch (error) {
         console.error('Download book error:', error);
@@ -79,7 +80,7 @@ router.get('/list-buku/:data', async (req, res) => {
         const daftarBuku = books.map(book => ({
             id: book.id, // Already an integer from auto-increment
             name: book.title || '', // Use title as name
-            path: book.downloadUrl ? `${req.protocol}://${req.get('host')}${book.downloadUrl}` : '' // Full download URL
+            path: book.downloadUrl ? `${req.protocol}://${process.env.PUBLIC_HOST || req.get('host')}${book.downloadUrl}` : '' // Full download URL
         }));
 
         // Return in the format expected by Unity game
@@ -103,7 +104,7 @@ router.get('/search-buku/:data', async (req, res) => {
         const daftarBuku = books.map(book => ({
             id: book.id, // Already an integer from auto-increment
             name: book.title || '', // Use title as name
-            path: book.downloadUrl ? `${req.protocol}://${req.get('host')}${book.downloadUrl}` : '' // Full download URL
+            path: book.downloadUrl ? `${req.protocol}://${process.env.PUBLIC_HOST || req.get('host')}${book.downloadUrl}` : '' // Full download URL
         }));
 
         // Return in the format expected by Unity game
