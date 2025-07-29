@@ -5,7 +5,7 @@ const fs = require('fs');
 class DatabaseService {
     constructor() {
         // Try persistent location first, fallback to local Data directory
-        const persistentPath = '/var/lib/quiz-game/quiz_game.db';
+        const persistentPath = '/var/www/quiz-game/database/quiz_game.db';
         const fallbackPath = path.join(__dirname, '../Data/quiz_game.db');
 
         // Check if persistent directory exists and is writable
