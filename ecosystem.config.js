@@ -16,7 +16,7 @@ module.exports = {
             NODE_ENV: 'production',
             PORT: 4000,
             HEALTH_PORT: 4001,
-            PUBLIC_HOST: process.env.SSH_HOST || '103.181.142.138'
+            PUBLIC_HOST: process.env.SSH_HOST || '103.59.95.207'
         },
 
         // Process management
@@ -47,7 +47,7 @@ module.exports = {
     deploy: {
         production: {
             user: 'ubuntu',
-            host: process.env.SSH_HOST,
+            host: process.env.SSH_HOST || '103.59.95.207',
             ref: 'origin/main',
             repo: 'git@github.com:arymprayoga/quiz-game.git',
             path: '/var/www/quiz-game',
