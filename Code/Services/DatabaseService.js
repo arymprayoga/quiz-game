@@ -4,7 +4,26 @@ const fs = require('fs');
 
 class DatabaseService {
     constructor() {
-        this.dbPath = path.join(__dirname, '../Data/quiz_game.db');
+        // Try persistent location first, fallback to local Data directory
+        const persistentPath = '/var/lib/quiz-game/quiz_game.db';
+        const fallbackPath = path.join(__dirname, '../Data/quiz_game.db');
+
+        // Check if persistent directory exists and is writable
+        const persistentDir = path.dirname(persistentPath);
+        try {
+            if (!fs.existsSync(persistentDir)) {
+                fs.mkdirSync(persistentDir, { recursive: true });
+            }
+            // Test write access
+            fs.accessSync(persistentDir, fs.constants.W_OK);
+            this.dbPath = persistentPath;
+            console.log('Using persistent database location:', this.dbPath);
+        } catch (error) {
+            console.error(error);
+            this.dbPath = fallbackPath;
+            console.log('Using fallback database location:', this.dbPath);
+        }
+
         this.db = null;
         this.initializeDatabase();
     }

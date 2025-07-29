@@ -92,7 +92,12 @@ setup_app_directory() {
     # Create logs directory
     mkdir -p $APP_DIR/logs
     
+    # Create persistent database directory
+    sudo mkdir -p /var/lib/quiz-game
+    sudo chown -R $USER:$USER /var/lib/quiz-game
+    
     log "Application directory created: $APP_DIR"
+    log "Database directory created: /var/lib/quiz-game"
 }
 
 # Clone repository
@@ -271,6 +276,10 @@ main() {
     # Check if this is initial setup or update
     if command -v node > /dev/null 2>&1 && command -v pm2 > /dev/null 2>&1; then
         log "Detected existing installation, performing update..."
+        
+        # Ensure database directory exists
+        sudo mkdir -p /var/lib/quiz-game
+        sudo chown -R $USER:$USER /var/lib/quiz-game
         
         clone_repository
         install_dependencies
