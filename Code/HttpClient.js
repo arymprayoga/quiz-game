@@ -9,7 +9,7 @@ class HttpClient {
 
         // Create axios instance with optimized settings
         this.client = axios.create({
-            baseURL: 'http://localhost:4000/api',
+            baseURL: process.env.API_BASE_URL,
             timeout: 10000, // 10 second timeout
             maxRedirects: 3,
             // Connection pooling settings
