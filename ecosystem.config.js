@@ -16,7 +16,7 @@ module.exports = {
             NODE_ENV: 'production',
             PORT: 4000,
             HEALTH_PORT: 4001,
-            PUBLIC_HOST: process.env.SSH_HOST || '103.59.95.207'
+            PUBLIC_HOST: process.env.SSH_HOST || '103.59.95.207:4000'
         },
 
         // Process management
